@@ -3,41 +3,6 @@ import matplotlib.pyplot as plt
 from drawille import Canvas
 
 
-class TerminalChart:
-
-    def __init__(self, width=100, height=100):
-        self.height = height
-        self.width = width
-        self.data = [0] * self.width
-        self.canvas = Canvas()
-        self.offset = 0
-        self.max = 0
-
-    def add(self, value):
-        self.data[self.offset % self.width] = value
-        self.offset += 1
-        self.max = max(self.max, value)
-
-    def __str__(self):
-        data = np.array(self.data)
-        scaled = data * self.height / self.max
-        self.clear()
-        for i in range(self.offset, self.offset + self.width):
-            i %= self.width
-            self.canvas.set(i + 1, self.height - int(scaled[i]))
-        frame = self.canvas.frame(0, 0, self.width + 2, self.height + 2)
-        return frame
-
-    def clear(self):
-        self.canvas.clear()
-        for x in range(self.width + 1):
-            self.canvas.set(x, 0)
-            self.canvas.set(x, self.height)
-        for y in range(self.height + 1):
-            self.canvas.set(0, y)
-            self.canvas.set(self.width, y)
-
-
 class Network:
 
     def __init__(self, layer_sizes):
@@ -46,8 +11,6 @@ class Network:
         self._init_weights(layer_sizes)
         # The weight matrices are between the layers.
         assert len(self.layers) - 1 == len(self.weights)
-        # Chart to visualize the current loss during training.
-        self.chart = TerminalChart()
 
     def _init_neurons(self, layer_sizes):
         assert all(layer_sizes)
@@ -60,23 +23,6 @@ class Network:
             shape = from_ + 1, to
             weights = np.random.normal(0, scale, shape)
             self.weights.append(weights)
-
-    def train_batched(self, inputs, targets, batch_size=100,
-            learning_rate=1e-3, plot_freq=1e5):
-        """
-        Split examples into batches and train on them. Return a list of the
-        losses on each batch.
-        """
-        assert len(inputs) == len(targets)
-        losses = []
-        for i in range(0, len(inputs), batch_size):
-            input_batch = inputs[i:i+batch_size]
-            target_batch = targets[i:i+batch_size]
-            loss = self.train(input_batch, target_batch, learning_rate)
-            losses.append(loss)
-            if i % (plot_freq // batch_size) == 0:
-               self._plot_loss(loss)
-        return losses
 
     def train(self, inputs, targets, learning_rate):
         """
@@ -187,18 +133,83 @@ class Network:
         for layer in self.layers:
             print(np.round(layer, 2))
 
-    def _plot_loss(self, loss):
-        self.chart.add(loss)
+
+class TerminalChart:
+
+    def __init__(self, width=100, height=100):
+        self.height = height
+        self.width = width
+        self.data = [0] * self.width
+        self.canvas = Canvas()
+        self.offset = 0
+        self.max = 0
+
+    def __iadd__(self, values):
+        if not hasattr(values, '__len__'):
+            values = [values]
+        for value in values:
+            self.data[self.offset % self.width] = value
+            self.offset += 1
+            self.max = max(self.max, value)
+        return self
+
+    def __str__(self):
+        data = np.array(self.data)
+        scaled = data * self.height / (self.max or 1)
+        self.clear()
+        for i in range(self.offset, self.offset + self.width):
+            i %= self.width
+            self.canvas.set(i + 1, self.height + 1 - int(scaled[i]))
+        frame = self.canvas.frame(0, 0, self.width + 2, self.height + 1)
+        return frame
+
+    def clear(self):
+        self.canvas.clear()
+        for x in range(self.width + 1):
+            self.canvas.set(x, 0)
+            self.canvas.set(x, self.height + 1)
+        for y in range(self.height + 1):
+            self.canvas.set(0, y)
+            self.canvas.set(self.width, y)
+
+
+class Training:
+
+    def __init__(self, network, learning_rate=1e-3, batch_size=100,
+            plot_freq=5e2):
+        self.network = network
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        self.plot_freq = plot_freq
+        self.chart = TerminalChart()
         print(self.chart)
 
+    def __call__(self, inputs, targets):
+        """
+        Split examples into batches and train on them. Return a list of the
+        losses on each batch.
+        """
+        assert len(inputs) == len(targets)
+        plot_batches = int(self.plot_freq // self.batch_size)
+        losses = []
+        for xs, ys in self._batched(inputs, targets, self.batch_size):
+            loss = self.network.train(xs, ys, self.learning_rate)
+            losses.append(loss)
+            # Plot the average loss over the last few batches as soon as they
+            # are available.
+            if len(losses) % plot_batches == 0 and len(losses) >= plot_batches:
+                average_loss = sum(losses[-plot_batches:]) / plot_batches
+                self._plot_loss(average_loss)
+        return losses
 
-def plot_losses(losses):
-    plt.plot(losses)
-    plt.xlabel('training batches')
-    plt.ylabel('squared errors of current batch')
-    plt.ylim(ymin=0)
-    plt.xlim(xmax=len(losses))
-    plt.show()
+    def _plot_loss(self, loss):
+        self.chart += loss
+        print(self.chart)
+
+    def _batched(self, inputs, targets, size):
+        assert len(inputs) == len(targets)
+        for i in range(0, len(inputs), size):
+            yield inputs[i:i+size], targets[i:i+size]
 
 
 def create_train_test(inputs, targets):
@@ -212,12 +223,15 @@ def create_train_test(inputs, targets):
     # input and target data.
     network = Network([len(inputs[0])] + [15] * 2 + [len(targets[0])])
     # Train the network on the training examples.
-    losses = []
-    for i in range(5):
-        losses += network.train_batched(train_inputs, train_targets,
-                learning_rate=1e-3)
-    plot_losses(losses)
-    # Evaluate the trained network.
+    training = Training(network, 1e-4, 100)
+    losses = training(train_inputs, train_targets)
+    plt.plot(losses)
+    plt.xlabel('training batches')
+    plt.ylabel('squared errors of current batch')
+    plt.ylim(ymin=0)
+    plt.xlim(xmax=len(losses))
+    plt.show()
+    # Evaluate the trained network on the test examples.
     loss = network.evaluate(test_inputs, test_targets)
     print('Test set loss:', loss)
 
