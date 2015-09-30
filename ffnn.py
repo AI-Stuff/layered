@@ -1,8 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from drawille import Canvas
 
 
-class Chart:
+class TerminalChart:
 
     def __init__(self, width=100, height=100):
         self.height = height
@@ -41,28 +42,31 @@ class Network:
 
     def __init__(self, layer_sizes):
         # Add extra weights for the biases.
-        layer_sizes = [x + 1 for x in layer_sizes]
         self._init_neurons(layer_sizes)
         self._init_weights(layer_sizes)
         # The weight matrices are between the layers.
         assert len(self.layers) - 1 == len(self.weights)
         # Chart to visualize the current loss during training.
-        self.chart = Chart()
+        self.chart = TerminalChart()
 
     def _init_neurons(self, layer_sizes):
-        assert all(size for size in layer_sizes)
-        # Layers have one more neuron than specified that is always set to one
-        # and used to set feed the bias.
+        assert all(layer_sizes)
         self.layers = [np.zeros(size) for size in layer_sizes]
 
     def _init_weights(self, layer_sizes, scale=1e-3):
         self.weights = []
-        for shape in zip(layer_sizes, layer_sizes[1:]):
+        for from_, to in zip(layer_sizes, layer_sizes[1:]):
+            # An additional input to the next layer is the bias value of one.
+            shape = from_ + 1, to
             weights = np.random.normal(0, scale, shape)
             self.weights.append(weights)
 
     def train_batched(self, inputs, targets, batch_size=100,
-            learning_rate=1e-3, plot_size=10000):
+            learning_rate=1e-3, plot_freq=1e5):
+        """
+        Split examples into batches and train on them. Return a list of the
+        losses on each batch.
+        """
         assert len(inputs) == len(targets)
         losses = []
         for i in range(0, len(inputs), batch_size):
@@ -70,77 +74,80 @@ class Network:
             target_batch = targets[i:i+batch_size]
             loss = self.train(input_batch, target_batch, learning_rate)
             losses.append(loss)
-            if i % (plot_size // batch_size) == 0 and i > 2 * batch_size:
+            if i % (plot_freq // batch_size) == 0:
                self._plot_loss(loss)
         return losses
 
     def train(self, inputs, targets, learning_rate):
+        """
+        Perform a forward and backward pass for each example and average the
+        gradients. Update the weights in the opposite direction scaled by the
+        learning rate. Return the average loss over the examples.
+        """
         assert len(inputs) == len(targets)
         # In batch gradient decent, we average the gradients over the training
         # examples.
-        combined_gradient = [np.zeros(x.shape) for x in self.weights]
-        combined_loss = 0
+        gradient = [np.zeros(x.shape) for x in self.weights]
+        loss = 0
         for input_, target in zip(inputs, targets):
             output = self.feed(input_)
-            current_gradient = self._back_propagation(target)
-            combined_gradient += current_gradient / len(inputs)
-            combined_loss += self._loss(output, target) / len(inputs)
+            gradient += self._back_propagation(target)
+            loss += self._loss(output, target)
+        # Normalize by the number of examples.
+        loss /= len(inputs)
+        gradient /= len(inputs)
         # Update weights in opposide gradient-direction multiplied by the
         # learning rate.
-        self.weights -= learning_rate * combined_gradient
+        self.weights -= learning_rate * gradient
         # Return the loss on the provided training examples.
-        return combined_loss
+        return loss
 
     def feed(self, inputs):
-        assert len(inputs) == len(self.layers[0]) - 1
+        assert len(inputs) == len(self.layers[0])
         # Set inputs.
-        self.layers[0][0] = 1
-        self.layers[0][1:] = inputs
-        # Propagate layer by layer.
+        self.layers[0] = inputs
+        # Propagate layer by layer. Input for the next layer is the current
+        # layer and a bias value of one.
         for i in range(len(self.layers) - 1):
-            activation = self._activation(self.layers[i].dot(self.weights[i]))
-            # activation = self.layers[i].dot(self.weights[i])
-            activation[0] = 1
+            bias_and_incoming = np.insert(self.layers[i], 1, 0)
+            activation = bias_and_incoming.dot(self.weights[i])
+            activation = self._activation(activation)
             assert len(activation) == len(self.layers[i + 1])
             self.layers[i + 1] = activation
-        # Return the activations of the output layer excluding the bias helper
-        # neuron.
-        return self.layers[-1][1:]
+        # Return the activations of the output layer.
+        return self.layers[-1]
 
-    def evaluate(self, input_, target):
-        output = self.feed(input_)
-        return self._loss(output, target)
+    def evaluate(self, inputs, targets):
+        loss = 0
+        for input_, target in zip(inputs, targets):
+            output = self.feed(input_)
+            loss += self._loss(output, target)
+        return loss / len(inputs)
 
     def _back_propagation(self, target):
         gradient_neurons = self._gradient_neurons(target)
         gradient_weights = self._gradient_weights(gradient_neurons)
-        # print(np.sum(np.sum(np.abs(x)) for x in gradient_weights))
         return np.array(gradient_weights)
 
     def _gradient_neurons(self, target):
-        assert len(target) == len(self.layers[-1]) - 1
+        assert len(target) == len(self.layers[-1])
         # The gradient at the output neurons is given by the derivative of the
-        # loss function. The bias helper neuron is not adjusted so its
-        # derivative is zero.
-        target = np.array([0] + target.tolist())
+        # loss function.
         gradient = [self._loss_derivative(self.layers[-1], target)]
         # Propagate layer by layer backwards. The gradient at each layer is
         # computed as the weighted sum of the activations of the next deeper
         # layer with the derivative of the activation function applied to all
         # value.
-        layers_and_outgoing_weights = zip(self.layers[1:-1], self.weights[1:])
-        for layer, weights in reversed(list(layers_and_outgoing_weights)):
-            outgoing = gradient[-1].dot(weights.transpose())
-            gradient.append([0] + self._activation_derivative(layer, outgoing))
+        layers_weights = list(zip(self.layers[:-1], self.weights))
+        for layer, weights in reversed(layers_weights):
+            # The first element is the derivative at the bias value of one. We
+            # don't need that.
+            outgoings = gradient[-1].dot(weights.transpose())[1:]
+            gradient.append(self._activation_derivative(layer, outgoings))
         gradient = list(reversed(gradient))
-        # The bias helper neurons should not be modified and their gradient
-        # should be zero.
-        for layer in gradient:
-            layer[0] = 0
-        # The gradient of the neurons has the same size as the neurons except
-        # that we don't need it for the input layer.
-        assert len(gradient) == len(self.layers) - 1
-        assert all(len(x) == len(y) for x, y in zip(gradient, self.layers[1:]))
+        # The gradient of the neurons has the same size as the neurons.
+        assert len(gradient) == len(self.layers)
+        assert all(len(x) == len(y) for x, y in zip(gradient, self.layers))
         return gradient
 
     def _gradient_weights(self, gradient_neurons):
@@ -148,8 +155,10 @@ class Network:
         # The gradient with respect to the weights is computed as the gradient
         # at the target neuron multiplied by the activation of the source
         # neuron.
-        for layer, next_gradient in zip(self.layers[:-1], gradient_neurons):
-            gradient.append(np.outer(layer, next_gradient))
+        for activation, derivatives in zip(self.layers[:-1],
+                gradient_neurons[1:]):
+            bias_activation = np.insert(activation, 1, 0)
+            gradient.append(np.outer(bias_activation, derivatives))
         # The gradient of the weights has the same size as the weights.
         assert len(gradient) == len(self.weights)
         assert all(len(x) == len(y) for x, y in zip(gradient, self.weights))
@@ -182,11 +191,21 @@ class Network:
         self.chart.add(loss)
         print(self.chart)
 
+
+def plot_losses(losses):
+    plt.plot(losses)
+    plt.xlabel('training batches')
+    plt.ylabel('squared errors of current batch')
+    plt.ylim(ymin=0)
+    plt.xlim(xmax=len(losses))
+    plt.show()
+
+
 def create_train_test(inputs, targets):
     assert len(inputs) == len(targets)
     assert len(inputs[0]) and len(targets[0])
     # Split the dataset into many training examples and some test examples.
-    split = int(0.5 * len(inputs))
+    split = int(0.8 * len(inputs))
     train_inputs, test_inputs = inputs[:split], inputs[split:]
     train_targets, test_targets = targets[:split], targets[split:]
     # Create a network. The input and output layer sizes are deriven from the
@@ -197,12 +216,10 @@ def create_train_test(inputs, targets):
     for i in range(5):
         losses += network.train_batched(train_inputs, train_targets,
                 learning_rate=1e-3)
-    # print(losses)
+    plot_losses(losses)
     # Evaluate the trained network.
-    loss = 0
-    for input_, target in zip(test_inputs, test_targets):
-        loss += network.evaluate(input_, target) / len(test_inputs)
-    return loss
+    loss = network.evaluate(test_inputs, test_targets)
+    print('Test set loss:', loss)
 
 if __name__ == '__main__':
     inputs = np.random.rand(100000, 10)
