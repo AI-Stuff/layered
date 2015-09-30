@@ -175,7 +175,7 @@ class TerminalChart:
 
 class Training:
 
-    def __init__(self, network, learning_rate=1e-3, batch_size=100,
+    def __init__(self, network, learning_rate=1e-3, batch_size=10,
             plot_freq=5e2):
         self.network = network
         self.learning_rate = learning_rate
@@ -223,8 +223,10 @@ def create_train_test(inputs, targets):
     # input and target data.
     network = Network([len(inputs[0])] + [15] * 2 + [len(targets[0])])
     # Train the network on the training examples.
-    training = Training(network, 1e-4, 100)
-    losses = training(train_inputs, train_targets)
+    training = Training(network)
+    losses = []
+    for _ in range(1):
+        losses += training(train_inputs, train_targets)
     plt.plot(losses)
     plt.xlabel('training batches')
     plt.ylabel('squared errors of current batch')
@@ -237,9 +239,12 @@ def create_train_test(inputs, targets):
 
 if __name__ == '__main__':
     inputs = np.random.rand(100000, 10)
-    targets = []
-    # targets.append(np.prod(inputs, axis=1))
-    targets.append(np.sum(inputs, axis=1))
-    targets = np.column_stack(targets)
+
+    products = np.prod(inputs, axis=1)
+    products = products / np.max(products)
+    sums = np.sum(inputs, axis=1)
+    sums = sums / np.max(sums)
+    targets = np.column_stack([sums, products])
+
     create_train_test(inputs, targets)
 
