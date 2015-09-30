@@ -55,24 +55,24 @@ class Network:
         # and used to set feed the bias.
         self.layers = [np.zeros(size) for size in layer_sizes]
 
-    def _init_weights(self, layer_sizes, scale=1e-1):
+    def _init_weights(self, layer_sizes, scale=1e-3):
         self.weights = []
         for shape in zip(layer_sizes, layer_sizes[1:]):
-            weights = np.random.normal(scale, scale, shape)
+            weights = np.random.normal(0, scale, shape)
             self.weights.append(weights)
 
     def train_batched(self, inputs, targets, batch_size=100,
             learning_rate=1e-3, plot_size=10000):
         assert len(inputs) == len(targets)
-        combined_loss = 0
+        losses = []
         for i in range(0, len(inputs), batch_size):
             input_batch = inputs[i:i+batch_size]
             target_batch = targets[i:i+batch_size]
             loss = self.train(input_batch, target_batch, learning_rate)
-            combined_loss += loss * batch_size / len(inputs)
+            losses.append(loss)
             if i % (plot_size // batch_size) == 0 and i > 2 * batch_size:
-                self._plot_loss(loss)
-        return combined_loss
+               self._plot_loss(loss)
+        return losses
 
     def train(self, inputs, targets, learning_rate):
         assert len(inputs) == len(targets)
@@ -191,25 +191,24 @@ def create_train_test(inputs, targets):
     train_targets, test_targets = targets[:split], targets[split:]
     # Create a network. The input and output layer sizes are deriven from the
     # input and target data.
-    network = Network([len(inputs[0])] + [15] * 5 + [len(targets[0])])
+    network = Network([len(inputs[0])] + [15] * 2 + [len(targets[0])])
     # Train the network on the training examples.
-    loss = 0
-    passes = 5
-    for i in range(passes):
-        alpha = 1 ** -(i + 2)
-        network.train_batched(train_inputs, train_targets, learning_rate=alpha)
+    losses = []
+    for i in range(5):
+        losses += network.train_batched(train_inputs, train_targets,
+                learning_rate=1e-3)
+    # print(losses)
     # Evaluate the trained network.
+    loss = 0
     for input_, target in zip(test_inputs, test_targets):
         loss += network.evaluate(input_, target) / len(test_inputs)
     return loss
 
-
 if __name__ == '__main__':
     inputs = np.random.rand(100000, 10)
     targets = []
-    targets.append(np.prod(inputs, axis=1))
-    # targets.append(np.sum(inputs, axis=1))
+    # targets.append(np.prod(inputs, axis=1))
+    targets.append(np.sum(inputs, axis=1))
     targets = np.column_stack(targets)
-    loss = create_train_test(inputs, targets)
-    print('Testset loss:', loss)
+    create_train_test(inputs, targets)
 
