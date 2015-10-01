@@ -187,6 +187,7 @@ class Training:
         plt.xlim(xmin=0, xmax=range_[-1])
         self.plot.set_data(range_, self.smoothed)
         plt.draw()
+        plt.pause(0.001)
 
     def _batched(self, inputs, targets, size):
         assert len(inputs) == len(targets)
