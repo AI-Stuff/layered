@@ -206,7 +206,7 @@ class Training:
         losses on each batch.
         """
         assert len(inputs) == len(targets)
-        plot_batches = int(self.plot_freq // self.batch_size)
+        plot_batches = max(1, int(self.plot_freq // self.batch_size))
         losses = []
         for xs, ys in self._batched(inputs, targets, self.batch_size):
             loss = self.network.train(xs, ys, self.learning_rate)
@@ -242,9 +242,9 @@ def create_train_test(inputs, targets):
     # input and target data.
     network = Network([len(inputs[0])] + [9] * 2 + [len(targets[0])])
     # Train the network on the training examples.
-    training = Training(network, learning_rate=1e-3)
+    training = Training(network, learning_rate=1e-2, batch_size=2)
     losses = []
-    for _ in range(3):
+    for _ in range(2):
         losses += training(train_inputs, train_targets)
     plt.plot(losses)
     plt.xlabel('training batches')
