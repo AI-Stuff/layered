@@ -1,6 +1,7 @@
 # Linux
 *.swp
 *.swo
+*.swn
 
 # Virtual environment
 /[Ii]nclude
