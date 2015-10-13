@@ -307,18 +307,19 @@ class CheckedGradient(Gradient):
         gradient = self.gradient.apply(target)
         computed = self._flatten(gradient)
         numerical = self._flatten(self.numerical.apply(target))
-        distance = np.absolute(computed - numerical)
-
-        print('\n      Numerical    Computed     Difference')
-        print('Min {:12.8f} {:12.8f} {:12.8f}'.format(numerical.min(),
-            computed.min(), distance.min()))
-        print('Max {:12.8f} {:12.8f} {:12.8f}'.format(numerical.max(),
-            computed.max(), distance.max()))
-
-        if distance.max() > 1e-3 * np.absolute(numerical).max():
-            print('Numerical gradient check failed')
+        distances = np.absolute(computed - numerical)
+        worst = distances.max() / np.absolute(numerical).max()
+        if worst > 1e-5:
+            print('Numerical gradient differs by {:.2f}%'.format(100 * worst))
+            print('      Numerical    Computed     Difference')
+            row = '{:12.8f} {:12.8f} {:12.8f}'
+            print('Min', row.format(numerical.min(), computed.min(),
+                distances.min()))
+            print('Max', row.format(numerical.max(), computed.max(),
+                distances.max()))
         else:
-            print('Gradient looks good')
+            pass
+            print('The gradient looks good :)')
         return gradient
 
     def _flatten(self, gradient):
@@ -461,17 +462,6 @@ class Plot:
         plt.pause(0.001)
 
 
-def test(network, examples):
-    """
-    Return the average cost over the examples.
-    """
-    cost = 0
-    for example in examples:
-        prediction = network.feed(example.data)
-        cost += network.cost.apply(prediction, example.target)
-    return cost / len(examples)
-
-
 def examples_regression(amount, inputs=10):
     data = np.random.rand(amount, inputs)
     products = np.prod(data, axis=1)
@@ -494,26 +484,28 @@ def examples_classification(amount, inputs=10, classes=3):
 
 if __name__ == '__main__':
     # Generate and split dataset.
-    examples = examples_classification(50000)
+    examples = examples_regression(50000)
     split = int(0.8 * len(examples))
     training, testing = examples[:split], examples[split:]
     # Create a network. The input and output layer sizes are derived from the
     # input and target data.
     network = Network([
         Layer(len(training[0].data), Linear),
-        Layer(10, Sigmoid),
-        Layer(len(training[0].target), Sigmoid)
+        Layer(10, Linear),
+        Layer(len(training[0].target), Linear)
     ])
     # Training.
-    gradient = Backpropagation(network, CrossEntropy)
-    # gradient = NumericalGradient(network, CrossEntropy)
-    # gradient = CheckedGradient(network, CrossEntropy, Backpropagation)
-    optimization = MiniBatchGradientDecent(network, CrossEntropy, gradient,
+    cost = SquaredErrors
+    # gradient = Backpropagation(network, cost)
+    # gradient = NumericalGradient(network, cost)
+    gradient = CheckedGradient(network, cost, Backpropagation)
+    optimization = MiniBatchGradientDecent(network, cost, gradient,
         learning_rate=1e-2)
     plot = Plot(optimization)
-    for cost in optimization.apply(examples):
-        plot.apply(cost)
+    for error in optimization.apply(examples):
+        plot.apply(error)
     # Evaluation.
-    cost = test(network, testing)
-    print('Test set cost:', cost)
+    predictions = [network.feed(x.data) for x in testing]
+    errors = [cost().apply(x, y.target) for x, y in zip(predictions, testing)]
+    print('Test set performance:', sum(errors) / len(testing))
 
