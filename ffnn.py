@@ -168,9 +168,8 @@ class Weight(np.ndarray):
 
 class Network:
 
-    def __init__(self, layers, cost):
+    def __init__(self, layers):
         self.layers = layers
-        self.cost = cost
         self.sizes = tuple(layer.size for layer in self.layers)
         # Weights are stored as matrices of the shape length of the left layer
         # times length of the right layer.
@@ -179,52 +178,51 @@ class Network:
         # Weight matrices are in between the layers.
         assert len(self.weights) == len(self.layers) - 1
 
-    def feed(self, data, weights=None):
-        weights = weights or self.weights
+    def feed(self, data):
         assert len(data) == self.layers[0].size
         self.layers[0].apply(data)
+        return self.forward(self.weights)
+
+    def forward(self, weights):
+        """
+        Evaluate the network with alternative weights on its last input and
+        return the output activation.
+        """
         # Propagate trough the remaining layers.
-        connections = zip(self.layers[:-1], self.weights, self.layers[1:])
+        connections = zip(self.layers[:-1], weights, self.layers[1:])
         for previous, weight, current in connections:
             incoming = weight.forward(previous.outgoing)
             current.apply(incoming)
         # Return the activations of the output layer.
         return self.layers[-1].outgoing
 
-    def evaluate(self, examples, weights=None):
-        """
-        Return the average cost over the examples. Optionally, external weights
-        can be used.
-        """
-        weights = weights or self.weights
-        cost = 0
-        for example in examples:
-            prediction = self.feed(example.data, weights)
-            cost += self.cost.apply(prediction, example.target)
-        return cost / len(examples)
 
+class Gradient:
 
-class Backpropagation:
-
-    def __init__(self, network, clipping=10, checked=False):
-        self.network = network
-        self.clipping = clipping
-        self.checked = checked
+    def __init__(self, *args, **kwargs):
+        assert len(args) == 2 and not kwargs
+        assert isinstance(args[0], Network) and issubclass(args[1], Cost)
+        self.network = args[0]
+        self.cost = args[1]()
 
     def apply(self, target):
-        delta_layers = self._layers(target)
-        delta_weights = self._weights(delta_layers)
-        if self.checked:
-            self._check(delta_weights)
-        self._clip(delta_weights)
-        return delta_weights
+        raise NotImplemented
+
+
+class Backpropagation(Gradient):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def apply(self, target):
+        return self._weights(self._layers(target))
 
     def _layers(self, target):
         assert len(target) == self.network.layers[-1].size
         # We start with the gradient at the output layer. It's computed as the
         # product of error derivative and local derivative at the last layer.
         prediction = self.network.layers[-1].outgoing
-        cost = self.network.cost.delta(prediction, target)
+        cost = self.cost.delta(prediction, target)
         local = self.network.layers[-1].delta()
         gradient = [cost * local]
         # Propagate backwards trough the hidden layers but not the input layer.
@@ -259,17 +257,14 @@ class Backpropagation:
             zip(gradient, self.network.weights))
         return gradient
 
-    def _check(self, gradient):
-        numerical = self._numerical(examples)
-        difference = list(np.absolute(x - y) for x, y in
-            zip(gradient, numerical))
-        worst = max(x.max() for x in difference)
-        if worst > 1e-4:
-            print('Numerical gradient check failed', worst)
-        else:
-            print('.')
 
-    def _numerical(self, examples, distance=1e-5):
+class NumericalGradient(Gradient):
+
+    def __init__(self, *args, **kwargs):
+        self.distance = kwargs.pop('distance', 1e-5)
+        super().__init__(*args, **kwargs)
+
+    def apply(self, target):
         """
         Modify each weight individually in both directions to calculate a
         numerical gradient of the weights.
@@ -280,29 +275,63 @@ class Backpropagation:
         gradient = list(np.zeros(weight.shape) for weight
             in self.network.weights)
         for i, connection in enumerate(network.weights):
-            for j, original in enumerate(connection):
+            for j, original in np.ndenumerate(connection):
                 # Sample above and below and compute costs.
-                weights[i][j] = original + distance
-                above = self.network.evaluate(examples, weights)
-                weights[i][j] = original - distance
-                below = self.network.evaluate(examples, weights)
-                # Compute numerical gradient.
-                gradient[i][j] = (above - below) / (2 * distance)
-                # Restore original value for the next coordinates in the loop.
+                weights[i][j] = original + self.distance
+                above = self._evaluate(weights, target)
+                weights[i][j] = original - self.distance
+                below = self._evaluate(weights, target)
+                # Restore the original value so we can reuse the weight matrix
+                # for the next iteration.
                 weights[i][j] = original
+                # Compute the numerical gradient.
+                gradient[i][j] = (above - below) / (2 * self.distance)
         return gradient
 
-    def _clip(self, gradient):
-        min_ = -self.clipping
-        max_ = self.clipping
-        for i in range(len(gradient)):
-           gradient[i] = np.clip(gradient[i], min_, max_)
+    def _evaluate(self, weights, target):
+        prediction = self.network.forward(weights)
+        cost = self.cost.apply(prediction, target)
+        return cost
+
+
+class CheckedGradient(Gradient):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args[:-1], **kwargs)
+        GradientClass = args[-1]
+        assert issubclass(GradientClass, Gradient)
+        self.gradient = GradientClass(self.network, args[1])
+        self.numerical = NumericalGradient(self.network, args[1])
+
+    def apply(self, target):
+        gradient = self.gradient.apply(target)
+        computed = self._flatten(gradient)
+        numerical = self._flatten(self.numerical.apply(target))
+        distance = np.absolute(computed - numerical)
+
+        print('\n      Numerical    Computed     Difference')
+        print('Min {:12.8f} {:12.8f} {:12.8f}'.format(numerical.min(),
+            computed.min(), distance.min()))
+        print('Max {:12.8f} {:12.8f} {:12.8f}'.format(numerical.max(),
+            computed.max(), distance.max()))
+
+        if distance.max() > 1e-3 * np.absolute(numerical).max():
+            print('Numerical gradient check failed')
+        else:
+            print('Gradient looks good')
+        return gradient
+
+    def _flatten(self, gradient):
+        return np.hstack(np.array(list(x.flatten() for x in gradient)))
 
 
 class Optimization:
 
     def __init__(self, *args, **kwargs):
+        assert len(args) == 2 and not kwargs
+        assert isinstance(args[0], Network)
         self.network = args[0]
+        self.cost = args[1]()
 
     def apply(self, examples):
         """
@@ -314,9 +343,10 @@ class Optimization:
 class GradientDecent(Optimization):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.backprop = kwargs.pop('backprop')
+        assert isinstance(args[-1], Gradient)
+        self.gradient = args[-1]
         self.learning_rate = kwargs.pop('learning_rate', 1e-6)
+        super().__init__(*args[:-1], **kwargs)
 
     def apply(self, examples):
         """
@@ -338,8 +368,8 @@ class GradientDecent(Optimization):
         Compute and average gradients and costs over all the examples.
         """
         prediction = self.network.feed(example.data)
-        gradient = self.backprop.apply(example.target)
-        cost = self.network.cost.apply(prediction, example.target)
+        gradient = self.gradient.apply(example.target)
+        cost = self.cost.apply(prediction, example.target)
         return gradient, cost
 
 
@@ -367,12 +397,13 @@ class BatchGradientDecent(GradientDecent):
             self.network.weights)
         for example in examples:
             gradient, cost = super()._compute(example)
+            assert len(gradient) == len(avg_gradient)
             avg_cost += cost / len(examples)
             for index, values in enumerate(gradient):
                 avg_gradient[index] += values
         # Normalize by the number of examples.
         cost /= len(examples)
-        gradient = list(x / len(examples) for x in gradient)
+        gradient = list(x / len(examples) for x in avg_gradient)
         return gradient, cost
 
     def _print_min_max(self):
@@ -386,8 +417,8 @@ class BatchGradientDecent(GradientDecent):
 class MiniBatchGradientDecent(BatchGradientDecent):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.batch_size = kwargs.pop('batch_size', 10)
+        super().__init__(*args, **kwargs)
 
     def apply(self, examples):
         for batch in self._batched(examples, self.batch_size):
@@ -430,6 +461,17 @@ class Plot:
         plt.pause(0.001)
 
 
+def test(network, examples):
+    """
+    Return the average cost over the examples.
+    """
+    cost = 0
+    for example in examples:
+        prediction = network.feed(example.data)
+        cost += network.cost.apply(prediction, example.target)
+    return cost / len(examples)
+
+
 def examples_regression(amount, inputs=10):
     data = np.random.rand(amount, inputs)
     products = np.prod(data, axis=1)
@@ -455,21 +497,23 @@ if __name__ == '__main__':
     examples = examples_classification(50000)
     split = int(0.8 * len(examples))
     training, testing = examples[:split], examples[split:]
-    # Create a network. The input and output layer sizes are deriven from the
+    # Create a network. The input and output layer sizes are derived from the
     # input and target data.
     network = Network([
         Layer(len(training[0].data), Linear),
         Layer(10, Sigmoid),
         Layer(len(training[0].target), Sigmoid)
-    ], CrossEntropy)
+    ])
     # Training.
-    backprop = Backpropagation(network)  # checked=True
-    optimization = MiniBatchGradientDecent(network,
-        backprop=backprop, learning_rate=1e-1)
+    gradient = Backpropagation(network, CrossEntropy)
+    # gradient = NumericalGradient(network, CrossEntropy)
+    # gradient = CheckedGradient(network, CrossEntropy, Backpropagation)
+    optimization = MiniBatchGradientDecent(network, CrossEntropy, gradient,
+        learning_rate=1e-2)
     plot = Plot(optimization)
     for cost in optimization.apply(examples):
         plot.apply(cost)
     # Evaluation.
-    cost = network.evaluate(testing)
+    cost = test(network, testing)
     print('Test set cost:', cost)
 
