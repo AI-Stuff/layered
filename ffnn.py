@@ -4,6 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def hstack_lines(blocks, sep=' '):
+    blocks = [x.split('\n') for x in blocks]
+    height = max(len(block) for block in blocks)
+    widths = [max(len(line) for line in block) for block in blocks]
+    output = ''
+    for y in range(height):
+        for x, w in enumerate(widths):
+            cell = blocks[x][y] if y < len(blocks[x]) else ''
+            output += cell.rjust(w, ' ') + sep
+        output += '\n'
+    return output
+
+
 class Example:
     """
     Immutable class representing one example in a dataset.
@@ -127,6 +140,18 @@ class Layer:
         self.outgoing = np.zeros(size)
         assert len(self.incoming) == len(self.outgoing) == self.size
 
+    def __len__(self):
+        assert len(self.incoming) == len(self.outgoing)
+        return len(self.incoming)
+
+    def __repr__(self):
+        return repr(self.outgoing)
+
+    def __str__(self):
+        table = zip(self.incoming, self.outgoing)
+        rows = [' /'.join('{: >6.3f}'.format(x) for x in row) for row in table]
+        return '\n'.join(rows)
+
     def apply(self, incoming):
         """
         Store the incoming activation, apply the activation function and store
@@ -147,21 +172,26 @@ class Layer:
 
 class Weight(np.ndarray):
 
-    def __new__(cls, from_size, to_size, init_scale=1e-4):
+    def __new__(cls, from_size, to_size, init_scale=1e-2):
         # Add extra weights for the biases.
         shape = (from_size + 1, to_size)
         values = np.random.normal(0, init_scale, shape)
         return np.ndarray.__new__(cls, shape, float, values)
 
+    def __str__(self):
+        rows = [' '.join('{: >6.3f}'.format(x) for x in row) for row in self]
+        return '\n'.join(rows)
+
     def forward(self, previous):
         # Add bias input of one.
-        previous = np.insert(previous, 1, 0)
+        previous = np.insert(previous, 0, 1)
+        assert previous[0] == 1
         current = previous.dot(self)
         return current
 
     def backward(self, next_):
         current = next_.dot(self.transpose())
-        # Remove bias input of one.
+        # Don't expose the bias input of one.
         current = current[1:]
         return current
 
@@ -196,6 +226,12 @@ class Network:
         # Return the activations of the output layer.
         return self.layers[-1].outgoing
 
+    def visualize(self):
+        print('Layers\n------')
+        print(hstack_lines(map(str, self.layers), '  '))
+        print('Weights\n-------')
+        print(hstack_lines(map(str, self.weights), '  '))
+
 
 class Gradient:
 
@@ -215,7 +251,9 @@ class Backpropagation(Gradient):
         super().__init__(*args, **kwargs)
 
     def apply(self, target):
-        return self._weights(self._layers(target))
+        layers = self._layers(target)
+        weights = self._weights(layers)
+        return weights
 
     def _layers(self, target):
         assert len(target) == self.network.layers[-1].size
@@ -224,17 +262,23 @@ class Backpropagation(Gradient):
         prediction = self.network.layers[-1].outgoing
         cost = self.cost.delta(prediction, target)
         local = self.network.layers[-1].delta()
+        assert len(cost) == len(local)
         gradient = [cost * local]
-        # Propagate backwards trough the hidden layers but not the input layer.
-        hidden = list(zip(network.weights[1:], self.network.layers[1:-1]))
+        # Propagate backwards through the hidden layers but not the input
+        # layer.  The current weight matrix is the one to the right of the
+        # current layer.
+        hidden = list(zip(self.network.weights[1:], self.network.layers[1:-1]))
+        assert all(x.shape[0] - 1 == len(y) for x, y in hidden)
         for weight, layer in reversed(hidden):
             # The gradient at a layer is computed as the derivative of both the
             # local activation and the weighted sum of the derivatives in the
             # deeper layer.
-            deeper = weight.backward(gradient[-1])
+            backward = weight.backward(gradient[-1])
             local = layer.delta()
-            gradient.append(deeper * local)
+            assert len(layer) == len(backward) == len(local)
+            gradient.append(backward * local)
         gradient = list(reversed(gradient))
+        assert len(gradient) == len(network.layers) - 1
         # We computed the gradient at the hidden layers and the output layer.
         assert len(gradient) == len(network.layers) - 1
         assert all(len(x) == y.size for x, y in
@@ -249,7 +293,8 @@ class Backpropagation(Gradient):
         for previous, delta in zip(network.layers[:-1], delta_layers):
             # We want to tweak the bias weights so we need them in the
             # gradient.
-            bias_and_activation = np.insert(previous.outgoing, 1, 0)
+            bias_and_activation = np.insert(previous.outgoing, 0, 1)
+            assert bias_and_activation[0] == 1
             gradient.append(np.outer(bias_and_activation, delta))
         # The gradient of the weights has the same size as the weights.
         assert len(gradient) == len(network.weights)
@@ -297,11 +342,14 @@ class NumericalGradient(Gradient):
 class CheckedGradient(Gradient):
 
     def __init__(self, *args, **kwargs):
+        self.tolerance = kwargs.pop('tolerance', 1e-8)
+        distance = kwargs.pop('distance', 1e-5)
         super().__init__(*args[:-1], **kwargs)
         GradientClass = args[-1]
         assert issubclass(GradientClass, Gradient)
         self.gradient = GradientClass(self.network, args[1])
-        self.numerical = NumericalGradient(self.network, args[1])
+        self.numerical = NumericalGradient(self.network, args[1],
+            distance=distance)
 
     def apply(self, target):
         gradient = self.gradient.apply(target)
@@ -309,17 +357,10 @@ class CheckedGradient(Gradient):
         numerical = self._flatten(self.numerical.apply(target))
         distances = np.absolute(computed - numerical)
         worst = distances.max() / np.absolute(numerical).max()
-        if worst > 1e-5:
-            print('Numerical gradient differs by {:.2f}%'.format(100 * worst))
-            print('      Numerical    Computed     Difference')
-            row = '{:12.8f} {:12.8f} {:12.8f}'
-            print('Min', row.format(numerical.min(), computed.min(),
-                distances.min()))
-            print('Max', row.format(numerical.max(), computed.max(),
-                distances.max()))
+        if worst > self.tolerance:
+            print('Gradient differs by {:.2f}%'.format(100 * worst))
         else:
-            pass
-            print('The gradient looks good :)')
+            print('Gradient looks good')
         return gradient
 
     def _flatten(self, gradient):
@@ -491,14 +532,14 @@ if __name__ == '__main__':
     # input and target data.
     network = Network([
         Layer(len(training[0].data), Linear),
-        Layer(10, Linear),
-        Layer(len(training[0].target), Linear)
+        Layer(10, Sigmoid),
+        Layer(10, Sigmoid),
+        Layer(len(training[0].target), Sigmoid)
     ])
     # Training.
     cost = SquaredErrors
-    # gradient = Backpropagation(network, cost)
-    # gradient = NumericalGradient(network, cost)
-    gradient = CheckedGradient(network, cost, Backpropagation)
+    gradient = Backpropagation(network, cost)
+    # gradient = CheckedGradient(network, cost, Backpropagation)
     optimization = MiniBatchGradientDecent(network, cost, gradient,
         learning_rate=1e-2)
     plot = Plot(optimization)
