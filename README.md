@@ -11,10 +11,17 @@ It makes sure you correctly understand all the details. For example, I had a
 small misunderstanding of the backpropagation formula. My network still trained
 but I found the mistake by numerical gradient checking.
 
-![Feed forward neural network](screenshot.png)
+Instructions
+------------
 
-(Cost per batch of a neural network with five Sigmoid layers on a
-classification problem.)
+If you have Numpy and Matplotlib for Python 3 installed on your machine, you
+can just run this command. To tweak parameters of the networks like changing
+activation functions or number of layers just edit the last section of this
+file.
+
+```bash
+python3 ffnn.py
+```
 
 Features
 --------
@@ -25,38 +32,33 @@ those are implemented in an object-oriented design so that alternatives can be
 added easily. There are also two generated toy problems for the networks to
 learn.
 
-Activation functions:
+### Activation functions
 
-- Linear
-- Sigmoid (or logistic)
-- Relu
+| Function | Definition | Graph |
+| -------- | :--------: | ----- |
+| Linear | x | ![Linear activation](image/linear.png) |
+| Sigmoid or logistic | 1 / (1 + exp(-x)) | ![Sigmoid activation](image/sigmoid.png) |
+| Relu | max(0, x) | ![Relu activation](image/relu.png) |
 
-Cost functions:
+### Cost functions
 
-- Squared errors
-- Cross entropy
+| Function | Definition | Graph |
+| -------- | :--------: | ----- |
+| Squared | 1 / 2 * (prediction - target) ^ 2 | ![Square cost](image/squared.png) |
 
-Optimization algorithms:
+### Optimization algorithms
 
 - Stochastic gradient decent
 - Batch gradient decent
 - Mini batch gradient decent
 
-Gradient algorithms:
+### Gradient algorithms
 
 - Backpropagation
 - Numerical gradient
 - Checked gradient
 
-Instructions
-------------
-
-If you have Numpy and Matplotlib for Python 3 installed on your machine, you
-can just run `python ffnn.py`. To tweak parameters of the networks like
-changing activation functions or number of layers just edit the last section of
-this file.
-
 Contribution
 ------------
 
-Feel free to create pull requests. If you have questions, you can ask me.
+Feel free to file pull requests. If you have questions, you can ask me.
