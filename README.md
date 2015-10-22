@@ -1,3 +1,8 @@
+[![Code Climate][1]][2]
+
+[1]: https://codeclimate.com/github/danijar/neural-network/badges/gpa.svg
+[2]: https://codeclimate.com/github/danijar/neural-network
+
 Layered Neural Network
 ======================
 
