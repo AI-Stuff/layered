@@ -1,7 +1,7 @@
-Feed Forward Neural Network
-===========================
+Layered Neural Network
+======================
 
-This project is aims to be a clean reference implementation of artificial
+This project is aims to be a clean reference implementation of feed forward
 neural networks in Python 3 under the MIT license. It's part of my efforts to
 understand the concepts of deep learning.
 
@@ -16,11 +16,10 @@ Instructions
 
 If you have Numpy and Matplotlib for Python 3 installed on your machine, you
 can just run this command. To tweak parameters of the networks like changing
-activation functions or number of layers just edit the last section of this
-file.
+activation functions or number of layers just edit this file.
 
 ```bash
-python3 ffnn.py
+python3 main.py
 ```
 
 Features
