@@ -48,7 +48,8 @@ learn.
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
-| Squared | 1 / 2 * (prediction - target) ^ 2 | ![Square cost](image/squared.png) |
+| Squared | (prediction - target) ^ 2 / 2 | ![Squared cost](image/squared.png) |
+| Cross Entropy | -((target * log(prediction)) + (1 - target) * log(1 - prediction)) | ![Cross Entropy cost](image/cross-entropy.png) |
 
 ### Optimization algorithms
 
