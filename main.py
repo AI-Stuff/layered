@@ -2,7 +2,7 @@ import numpy as np
 from layered.core import Example
 from layered.network import Network, Layer
 from layered.activation import Linear, Sigmoid, Relu, Softmax
-from layered.cost import SquaredErrors, CrossEntropy
+from layered.cost import Squared, CrossEntropy
 from layered.optimization import MiniBatchGradientDecent
 from layered.gradient import Backpropagation, CheckedGradient
 from layered.utility import examples_regression, examples_classification
@@ -25,11 +25,11 @@ if __name__ == '__main__':
     ])
 
     # Training.
-    cost = SquaredErrors
+    cost = CrossEntropy
     gradient = Backpropagation(network, cost)
     # gradient = CheckedGradient(network, cost, Backpropagation)
     optimization = MiniBatchGradientDecent(network, cost, gradient,
-        learning_rate=1e-2)
+        learning_rate=1e-3)
     plot = Plot(optimization)
     for error in optimization.apply(examples):
         plot.apply(error)
@@ -37,5 +37,6 @@ if __name__ == '__main__':
     # Evaluation.
     predictions = [network.feed(x.data) for x in testing]
     errors = [cost().apply(x, y.target) for x, y in zip(predictions, testing)]
+    errors = [x.sum() / len(predictions[0]) for x in errors]
     print('Test set performance:', sum(errors) / len(testing))
 

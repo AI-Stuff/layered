@@ -100,13 +100,15 @@ class NumericalGradient(Gradient):
                 # for the next iteration.
                 weights[i][j] = original
                 # Compute the numerical gradient.
-                gradient[i][j] = (above - below) / (2 * self.distance)
+                sample = (above - below) / (2 * self.distance)
+                gradient[i][j] = sample
         return gradient
 
     def _evaluate(self, weights, target):
         prediction = self.network.forward(weights)
         cost = self.cost.apply(prediction, target)
-        return cost
+        assert cost.shape == prediction.shape == target.shape
+        return cost.sum()
 
 
 class CheckedGradient(Gradient):

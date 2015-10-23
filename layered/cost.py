@@ -12,11 +12,11 @@ class Cost:
         raise NotImplemented
 
 
-class SquaredErrors(Cost):
+class Squared(Cost):
 
     @staticmethod
     def apply(prediction, target):
-        return np.sum(np.square(prediction - target)) / 2
+        return (prediction - target) ** 2 / 2
 
     @staticmethod
     def delta(prediction, target):
@@ -27,8 +27,13 @@ class CrossEntropy(Cost):
 
     @staticmethod
     def apply(prediction, target):
-        return np.sum(-target * np.log(prediction))
+        epsilon = 1e-11
+        clipped = np.clip(prediction, epsilon, 1 - epsilon)
+        cost = target * np.log(clipped) + (1 - target) * np.log(1 - clipped)
+        return -cost
 
     @staticmethod
     def delta(prediction, target):
-        return target-prediction
+        delta = (prediction - target) / (prediction - prediction ** 2)
+        assert delta.shape == target.shape == prediction.shape
+        return delta
