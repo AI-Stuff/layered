@@ -1,5 +1,5 @@
 import numpy as np
-from layered.core import Example
+from layered.example import Example
 from layered.utility import hstack_lines
 
 

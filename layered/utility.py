@@ -1,3 +1,4 @@
+import functools
 import numpy as np
 from layered.network import Example
 
@@ -15,21 +16,16 @@ def hstack_lines(blocks, sep=' '):
     return output
 
 
-def examples_regression(amount, inputs=10):
-    data = np.random.rand(amount, inputs)
-    products = np.prod(data, axis=1)
-    products = products / np.max(products)
-    sums = np.sum(data, axis=1)
-    sums = sums / np.max(sums)
-    targets = np.column_stack([sums, products])
-    return [Example(x, y) for x, y in zip(data, targets)]
+def listify(fn=None, wrapper=list):
+    """
+    From http://stackoverflow.com/a/12377059/1079110
+    """
+    def listify_return(fn):
+        @functools.wraps(fn)
+        def listify_helper(*args, **kw):
+            return wrapper(fn(*args, **kw))
+        return listify_helper
 
-
-def examples_classification(amount, inputs=10, classes=3):
-    data = np.random.randint(0, 1000, (amount, inputs))
-    mods = np.mod(np.sum(data, axis=1), classes)
-    data = data.astype(float) / data.max()
-    targets = np.zeros((amount, classes))
-    for index, mod in enumerate(mods):
-        targets[index][mod] = 1
-    return [Example(x, y) for x, y in zip(data, targets)]
+    if fn is None:
+        return listify_return
+    return listify_return(fn)
