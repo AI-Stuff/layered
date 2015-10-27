@@ -7,30 +7,55 @@ from layered.example import Example
 from layered.utility import listify
 
 
-def regression(amount, inputs=10):
-    data = np.random.rand(amount, inputs)
-    products = np.prod(data, axis=1)
-    products = products / np.max(products)
-    sums = np.sum(data, axis=1)
-    sums = sums / np.max(sums)
-    targets = np.column_stack([sums, products])
-    return [Example(x, y) for x, y in zip(data, targets)]
+class Dataset:
+
+    def __init__(self):
+        self.training = []
+        self.testing = []
+
+    def split(self, examples, ratio=0.8):
+        split = int(ratio * len(examples))
+        return examples[:split], examples[split:]
 
 
-def classification(amount, inputs=10, classes=3):
-    data = np.random.randint(0, 1000, (amount, inputs))
-    mods = np.mod(np.sum(data, axis=1), classes)
-    data = data.astype(float) / data.max()
-    targets = np.zeros((amount, classes))
-    for index, mod in enumerate(mods):
-        targets[index][mod] = 1
-    return [Example(x, y) for x, y in zip(data, targets)]
+class Regression(Dataset):
+
+    def __init__(self, amount, inputs=10):
+        data = np.random.rand(amount, inputs)
+        products = np.prod(data, axis=1)
+        products = products / np.max(products)
+        sums = np.sum(data, axis=1)
+        sums = sums / np.max(sums)
+        targets = np.column_stack([sums, products])
+        examples = [Example(x, y) for x, y in zip(data, targets)]
+        self.training, self.testing = self.split(examples)
 
 
-def mnist(path='dataset/mnist'):
+class Classification(Dataset):
+
+    def __init__(self, amount, inputs=10, classes=3):
+        data = np.random.randint(0, 1000, (amount, inputs))
+        mods = np.mod(np.sum(data, axis=1), classes)
+        data = data.astype(float) / data.max()
+        targets = np.zeros((amount, classes))
+        for index, mod in enumerate(mods):
+            targets[index][mod] = 1
+        examples = [Example(x, y) for x, y in zip(data, targets)]
+        self.training, self.testing = self.split(examples)
+
+
+class Mnist(Dataset):
+
+    def __init__(self, path='dataset/mnist'):
+        self.training = self.read(
+            os.path.join(path, 'train-images-idx3-ubyte.gz'),
+            os.path.join(path, 'train-labels-idx1-ubyte.gz'))
+        self.testing = self.read(
+            os.path.join(path, 't10k-images-idx3-ubyte.gz'),
+            os.path.join(path, 't10k-labels-idx1-ubyte.gz'))
 
     @listify
-    def read(image_path, label_path):
+    def read(self, image_path, label_path):
         images = gzip.open(image_path, 'rb')
         _, size, rows, cols = struct.unpack('>IIII', images.read(16))
         image_bin = array.array('B', images.read())
@@ -49,18 +74,10 @@ def mnist(path='dataset/mnist'):
             target[label_bin[i]] = 1
             yield Example(data, target)
 
-    def show(example):
+    def show(self, example):
         import pylab
         pylab.imshow(example.data.reshape(28, 28), cmap=pylab.cm.gray,
-            interpolation="nearest")
-        print(example.target)
+            interpolation='nearest')
+        print('Target:', example.target)
         pylab.show()
 
-    training = read(
-        os.path.join(path, 'train-images-idx3-ubyte.gz'),
-        os.path.join(path, 'train-labels-idx1-ubyte.gz'))
-    testing = read(
-        os.path.join(path, 't10k-images-idx3-ubyte.gz'),
-        os.path.join(path, 't10k-labels-idx1-ubyte.gz'))
-
-    return training, testing
