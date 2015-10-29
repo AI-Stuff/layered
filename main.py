@@ -9,9 +9,14 @@ from layered.plot import Plot
 from layered.dataset import Regression, Classification, Mnist
 
 
+def evaluation(network, testing, cost):
+    predictions = [network.feed(x.data) for x in testing]
+    pairs = [(x, y.target) for x, y in zip(predictions, testing)]
+    error = sum(np.argmax(x) != np.argmax(y) for x, y in pairs) / len(testing)
+    print('Test error {:.2f}%'.format(100 * error))
+
+
 if __name__ == '__main__':
-    # Generate and split dataset.
-    # examples = regression(50000)
     print('Loading dataset')
     dataset = Mnist()
 
@@ -19,34 +24,21 @@ if __name__ == '__main__':
     # input and target data.
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
-        Layer(500, Relu),
+        Layer(700, Relu),
+        Layer(300, Relu),
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
 
-    # Training.
     cost = Squared
     gradient = Backpropagation(network, cost)
     # gradient = CheckedGradient(network, cost, Backpropagation)
     optimization = MiniBatchGradientDecent(network, cost, gradient,
-        learning_rate=1e-1, batch_size=10)
+        learning_rate=5e-2, batch_size=2)
     plot = Plot(optimization)
+
     print('Start training')
-    try:
+    for round_ in range(10):
+        print('Round', round_)
         for error in optimization.apply(dataset.training):
             plot.apply(error)
-    except KeyboardInterrupt:
-        print('\nAborted')
-
-    # Evaluation.
-    print('Evaluation')
-    predictions = [network.feed(x.data) for x in dataset.testing]
-    pairs = [(x, y.target) for x, y in zip(predictions, dataset.testing)]
-    for pair in pairs[:20]:
-        print(pair)
-    error = sum(cost().apply(x, y).sum() / len(x) for x, y in pairs)
-    error /= len(dataset.testing)
-    accuracy = sum(np.argmax(x) == np.argmax(y) for x, y in pairs)
-    accuracy /= len(dataset.testing)
-    print('Test set cost {:.6f} and classification error {:.2f}%'.format(
-        error, 100 * (1 - accuracy)))
-
+        evaluation(network, dataset.testing, cost())
