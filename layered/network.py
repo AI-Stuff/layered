@@ -1,3 +1,4 @@
+import operator
 import numpy as np
 from layered.example import Example
 from layered.utility import hstack_lines
@@ -43,30 +44,64 @@ class Layer:
         return self.activation.delta(self.incoming, self.outgoing)
 
 
-class Weight(np.ndarray):
+class Matrices:
 
-    def __new__(cls, from_size, to_size, init_scale=1e-2):
-        # Add extra weights for the biases.
-        shape = (from_size + 1, to_size)
-        values = np.random.normal(0, init_scale, shape)
-        return np.ndarray.__new__(cls, shape, float, values)
+    def __init__(self, shapes, flat=None):
+        self.shapes = shapes
+        length = sum(x * y for x, y in shapes)
+        if flat is not None:
+            assert len(flat) == length
+        else:
+            flat = np.zeros(length)
+        self.flat = flat
 
-    def __str__(self):
-        rows = [' '.join('{: >6.3f}'.format(x) for x in row) for row in self]
-        return '\n'.join(rows)
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[i] for i in self._range_from_slice(index)]
+        slice_ = self._locate(index)
+        data = self.flat[slice_]
+        data = data.reshape(self.shapes[index])
+        return data
 
-    def forward(self, previous):
-        # Add bias input of one.
-        previous = np.insert(previous, 0, 1)
-        assert previous[0] == 1
-        current = previous.dot(self)
-        return current
+    def __setitem__(self, index, data):
+        if data.shape != self.shapes[index]:
+            raise ValueError('shape mismatch')
+        slice_ = self._locate(index)
+        data = data.reshape(slice_.stop - slice_.start)
+        self.flat[slice_] = data
 
-    def backward(self, next_):
-        current = next_.dot(self.transpose())
-        # Don't expose the bias input of one.
-        current = current[1:]
-        return current
+    def __getattr__(self, name):
+        # Tunnel not found properties to the underlying array.
+        return getattr(self.flat, name)
+
+    def __setattr_(self, name, value):
+        # Ensure that the size of the underlying array doesn't change.
+        if name == 'flat':
+            assert value.shape == self.flat.shape
+        super().__setattr__(name, value)
+
+    def __sub__(self, other):
+        assert self.shapes == other.shapes
+        return Matrices(self.shapes, self.flat - other.flat)
+
+    def __mul__(self, scalar):
+        return Matrices(self.shapes, self.flat * scalar)
+
+    __rmul__ = __mul__
+
+    def _locate(self, index):
+        if index < 0:
+            index = len(self.shapes) + index
+        assert 0 <= index < len(self.shapes)
+        offset = sum(x * y for x, y in self.shapes[:index])
+        length = operator.mul(*self.shapes[index])
+        return slice(offset, offset + length)
+
+    def _range_from_slice(self, slice_):
+        start = slice_.start if slice_.start else 0
+        stop = slice_.stop if slice_.stop else len(self.shapes)
+        step = slice_.step if slice_.step else 1
+        return range(start, stop, step)
 
 
 class Network:
@@ -74,33 +109,37 @@ class Network:
     def __init__(self, layers):
         self.layers = layers
         self.sizes = tuple(layer.size for layer in self.layers)
-        # Weights are stored as matrices of the shape length of the left layer
-        # times length of the right layer.
-        shapes = zip(self.sizes[:-1], self.sizes[1:])
-        self.weights = list(Weight(*shape) for shape in shapes)
+        # Weight matrices have the dimensions of the two layers around them.
+        # Also, there is an additional bias input to each weight matrix.
+        self.shapes = zip(self.sizes[:-1], self.sizes[1:])
+        self.shapes = [(x + 1, y) for x, y in self.shapes]
         # Weight matrices are in between the layers.
-        assert len(self.weights) == len(self.layers) - 1
+        assert len(self.shapes) == len(self.layers) - 1
 
-    def feed(self, data):
-        assert len(data) == self.layers[0].size
-        self.layers[0].apply(data)
-        return self.forward(self.weights)
-
-    def forward(self, weights):
+    def feed(self, weights, data):
         """
-        Evaluate the network with alternative weights on its last input and
+        Evaluate the network with alternative weights on the input data and
         return the output activation.
         """
+        assert len(data) == self.layers[0].size
+        self.layers[0].apply(data)
         # Propagate trough the remaining layers.
         connections = zip(self.layers[:-1], weights, self.layers[1:])
         for previous, weight, current in connections:
-            incoming = weight.forward(previous.outgoing)
+            incoming = self.forward(previous.outgoing, weight)
             current.apply(incoming)
         # Return the activations of the output layer.
         return self.layers[-1].outgoing
 
-    def visualize(self):
-        print('Layers\n------')
-        print(hstack_lines(map(str, self.layers), '  '))
-        print('Weights\n-------')
-        print(hstack_lines(map(str, self.weights), '  '))
+    def forward(self, activations, weights):
+        # Add bias input of one.
+        activations = np.insert(activations, 0, 1)
+        assert activations[0] == 1
+        right = activations.dot(weights)
+        return right
+
+    def backward(self, activations, weights):
+        left = activations.dot(weights.transpose())
+        # Don't expose the bias input of one.
+        left = left[1:]
+        return left

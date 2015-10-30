@@ -9,19 +9,19 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
 
 class Plot:
 
-    def __init__(self, optimization, refresh=100, smoothing=1):
-        self.optimization = optimization
+    def __init__(self, refresh=100, smoothing=1):
         self.refresh = refresh
         self.smoothing = smoothing
         self.costs = []
         self.smoothed = []
         self._init_plot()
 
-    def apply(self, cost):
-        self.costs.append(cost)
-        self.smoothed.append(np.mean(self.costs[-self.smoothing:]))
-        if len(self.costs) % self.refresh == 0:
-            self._refresh()
+    def __call__(self, costs):
+        for cost in costs:
+            self.costs.append(cost)
+            self.smoothed.append(np.mean(self.costs[-self.smoothing:]))
+            if len(self.costs) % self.refresh == 0:
+                self._refresh()
 
     def _init_plot(self):
         self.plot, = plt.plot([], [])

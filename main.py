@@ -1,9 +1,9 @@
 import numpy as np
 from layered.example import Example
-from layered.network import Network, Layer
+from layered.network import Network, Layer, Matrices
 from layered.activation import Linear, Sigmoid, Relu, Softmax
 from layered.cost import Squared, CrossEntropy
-from layered.optimization import MiniBatchGradientDecent
+from layered.optimization import GradientDecent
 from layered.gradient import Backpropagation, CheckedGradient
 from layered.plot import Plot
 from layered.dataset import Regression, Classification, Mnist
@@ -16,29 +16,38 @@ def evaluation(network, testing, cost):
     print('Test error {:.2f}%'.format(100 * error))
 
 
+def batched(iterable, size):
+    batch = []
+    for element in iterable:
+        batch.append(element)
+        if len(batch) == size:
+            yield batch
+            batch = []
+    yield batch
+
+
 if __name__ == '__main__':
     print('Loading dataset')
-    dataset = Mnist()
+    dataset = Classification(10000)
 
-    # Create a network. The input and output layer sizes are derived from the
-    # input and target data.
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
-        Layer(700, Relu),
-        Layer(300, Relu),
+        Layer(500, Relu),
+        Layer(200, Relu),
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
+    weights = Matrices(network.shapes)
 
-    cost = Squared
-    gradient = Backpropagation(network, cost)
-    # gradient = CheckedGradient(network, cost, Backpropagation)
-    optimization = MiniBatchGradientDecent(network, cost, gradient,
-        learning_rate=5e-2, batch_size=2)
-    plot = Plot(optimization)
+    cost = Squared()
+    backprop = Backpropagation(network, cost)
+    decent = GradientDecent()
+    plot = Plot()
 
     print('Start training')
     for round_ in range(10):
         print('Round', round_)
-        for error in optimization.apply(dataset.training):
-            plot.apply(error)
+        for example in dataset.training:
+            gradient = backprop(weights, example)
+            weights = decent(weights, gradient, learning_rate=0.1)
+            plot(cost(network.feed(weights, example.data), example.target))
         evaluation(network, dataset.testing, cost())
