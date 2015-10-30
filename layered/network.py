@@ -92,7 +92,8 @@ class Matrices:
     def _locate(self, index):
         if index < 0:
             index = len(self.shapes) + index
-        assert 0 <= index < len(self.shapes)
+        if not (0 <= index < len(self.shapes)):
+            raise IndexError
         offset = sum(x * y for x, y in self.shapes[:index])
         length = operator.mul(*self.shapes[index])
         return slice(offset, offset + length)

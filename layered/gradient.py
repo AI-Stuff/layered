@@ -75,20 +75,15 @@ class NumericalGradient(Gradient):
         super().__init__(network, cost)
         self.distance = distance
 
-    def __call__(self, weights, examples):
+    def __call__(self, weights, example):
         """
         Modify each weight individually in both directions to calculate a
         numeric gradient of the weights.
         """
-        total = sum(self._gradient_weights(weights, x) for x in examples)
-        return total / len(examples)
-
-    def _gradient_weights(self, weights, example):
         # We need a copy of the weights that we can modify to evaluate the cost
         # function on.
-        modified = weights.copy()
-        gradient = list(np.zeros(weight.shape) for weight
-            in weights)
+        modified = Matrices(weights.shapes, weights.flat.copy())
+        gradient = Matrices(weights.shapes)
         for i, connection in enumerate(weights):
             for j, original in np.ndenumerate(connection):
                 # Sample above and below and compute costs.
@@ -107,18 +102,16 @@ class NumericalGradient(Gradient):
     def _evaluate(self, weights, example):
         prediction = self.network.feed(weights, example.data)
         cost = self.cost(prediction, example.target)
-        assert cost.shape == prediction.shape == target.shape
+        assert cost.shape == prediction.shape
         return cost.sum()
 
 
-class CheckedGradient(Gradient):
+class CheckedBackpropagation(Gradient):
 
-    def __init__(self, network, cost, distance, tolerance=1e-8):
+    def __init__(self, network, cost, distance=1e-5, tolerance=1e-8):
         self.tolerance = tolerance
         super().__init__(network, cost)
-        GradientClass = args[-1]
-        assert issubclass(GradientClass, Gradient)
-        self.analytic = GradientClass(network, cost)
+        self.analytic = Backpropagation(network, cost)
         self.numeric = NumericalGradient(network, cost, distance)
 
     def __call__(self, weights, examples):

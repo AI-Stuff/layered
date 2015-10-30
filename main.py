@@ -4,7 +4,7 @@ from layered.network import Network, Layer, Matrices
 from layered.activation import Linear, Sigmoid, Relu, Softmax
 from layered.cost import Squared, CrossEntropy
 from layered.optimization import GradientDecent
-from layered.gradient import Backpropagation, CheckedGradient
+from layered.gradient import Backpropagation, CheckedBackpropagation
 from layered.plot import Plot
 from layered.dataset import Regression, Classification, Mnist
 
@@ -28,12 +28,12 @@ def batched(iterable, size):
 
 if __name__ == '__main__':
     print('Loading dataset')
-    dataset = Classification(10000)
+    dataset = Mnist()
 
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
-        Layer(500, Relu),
-        Layer(200, Relu),
+        Layer(5, Relu),
+        Layer(2, Relu),
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
     weights = Matrices(network.shapes)
