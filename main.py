@@ -9,8 +9,8 @@ from layered.plot import Plot
 from layered.dataset import Regression, Classification, Mnist
 
 
-def evaluation(network, testing, cost):
-    predictions = [network.feed(x.data) for x in testing]
+def evaluation(network, weights, testing):
+    predictions = [network.feed(weights, x.data) for x in testing]
     pairs = [(x, y.target) for x, y in zip(predictions, testing)]
     error = sum(np.argmax(x) != np.argmax(y) for x, y in pairs) / len(testing)
     print('Test error {:.2f}%'.format(100 * error))
@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
-        Layer(5, Relu),
-        Layer(2, Relu),
+        Layer(700, Relu),
+        Layer(300, Relu),
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
     weights = Matrices(network.shapes)
@@ -50,4 +50,4 @@ if __name__ == '__main__':
             gradient = backprop(weights, example)
             weights = decent(weights, gradient, learning_rate=0.1)
             plot(cost(network.feed(weights, example.data), example.target))
-        evaluation(network, dataset.testing, cost())
+        evaluation(network, weights, dataset.testing)
