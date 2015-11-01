@@ -53,4 +53,3 @@ def hstack_lines(blocks, sep=' '):
             output += cell.rjust(w, ' ') + sep
         output += '\n'
     return output
-

@@ -1,13 +1,19 @@
 import numpy as np
-from layered.example import Example
-from layered.network import Network, Layer, Matrices
 from layered.activation import Linear, Sigmoid, Relu, Softmax
 from layered.cost import Squared, CrossEntropy
-from layered.optimization import GradientDecent
+from layered.example import Example
 from layered.gradient import Backpropagation, CheckedBackpropagation
+from layered.network import Network, Layer, Matrices
+from layered.optimization import GradientDecent
 from layered.plot import Plot
+from layered.utility import repeat, batched, average, listify
 from layered.dataset import Regression, Classification, Mnist
-from layered.utility import repeat, batched, average
+
+
+class Problem:
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 
 def compute_error(network, weights, examples):
@@ -16,38 +22,46 @@ def compute_error(network, weights, examples):
         np.argmax(network.feed(weights, x.data))))
 
 
-def compute_cost(network, weights, examples):
-    return average(batch, lambda x:
-        cost(network.feed(weights, x.data), x.target).mean())
+def compute_costs(network, weights, cost, examples):
+    prediction = [network.feed(weights, x.data) for x in examples]
+    costs = [cost(x, y.target).mean() for x, y in zip(prediction, examples)]
+    return list(costs)
+
+
+def evaluate_every(index, problem, network, weights, testing):
+    if (index + 1) % (problem.evaluate_every // problem.batch_size) != 0:
+        return
+    error = 100 * compute_error(network, weights, testing)
+    print('Batch {} test error {:.2f}%'.format(index + 1, error))
 
 
 if __name__ == '__main__':
-    print('Load dataset')
-    dataset = Mnist()
+    # Define the problem
+    problem = Problem(training_rounds=5, batch_size=2, learning_rate=0.05,
+        evaluate_every=5000, weight_scale=0.1, dataset=Mnist(),
+        cost=Squared())
 
+    # Define model and initialize weights
     network = Network([
-        Layer(len(dataset.training[0].data), Linear),
+        Layer(len(problem.dataset.training[0].data), Linear),
         Layer(700, Relu),
         Layer(300, Relu),
-        Layer(len(dataset.training[0].target), Sigmoid)
+        Layer(len(problem.dataset.training[0].target), Sigmoid)
     ])
+    weights = Matrices(network.shapes)
+    weights.flat = np.random.normal(0, problem.weight_scale, len(weights.flat))
 
-    num_weights = sum(x * y for x, y in network.shapes)
-    weights = Matrices(network.shapes, np.random.normal(0, 0.1, num_weights))
-
-    cost = Squared()
-    backprop = Backpropagation(network, cost)
+    # Classes needed during training
+    backprop = Backpropagation(network, problem.cost)
     decent = GradientDecent()
     plot = Plot()
 
-    print('Start training')
-    examples = repeat(dataset.training, 5)
-    for index, batch in enumerate(batched(examples, 2)):
+    # Train the model
+    examples = repeat(problem.dataset.training, problem.training_rounds)
+    batches = batched(examples, problem.batch_size)
+    testing = problem.dataset.testing
+    for index, batch in enumerate(batches):
         gradient = average(batch, lambda x: backprop(weights, x))
-        weights = decent(weights, gradient, learning_rate=0.05)
-        for example in batch:
-            plot(cost(network.feed(weights, example.data), example.target))
-        # plot(compute_cost(network, weights, batch))
-        if (index + 1) % 1000 == 0:
-            print('Batch {} test error {:.2f}%'.format(index + 1, 100 *
-                compute_error(network, weights, dataset.testing)))
+        weights = decent(weights, gradient, problem.learning_rate)
+        plot(compute_costs(network, weights, problem.cost, batch))
+        evaluate_every(index, problem, network, weights, testing)
