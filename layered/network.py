@@ -141,20 +141,20 @@ class Network:
         # Propagate trough the remaining layers.
         connections = zip(self.layers[:-1], weights, self.layers[1:])
         for previous, weight, current in connections:
-            incoming = self.forward(previous.outgoing, weight)
+            incoming = self.forward(weight, previous.outgoing)
             current.apply(incoming)
         # Return the activations of the output layer.
         return self.layers[-1].outgoing
 
-    def forward(self, activations, weights):
+    def forward(self, weight, activations):
         # Add bias input of one.
         activations = np.insert(activations, 0, 1)
         assert activations[0] == 1
-        right = activations.dot(weights)
+        right = activations.dot(weight)
         return right
 
-    def backward(self, activations, weights):
-        left = activations.dot(weights.transpose())
+    def backward(self, weight, activations):
+        left = activations.dot(weight.transpose())
         # Don't expose the bias input of one.
         left = left[1:]
         return left

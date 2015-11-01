@@ -49,7 +49,7 @@ class Backpropagation(Gradient):
         # The gradient at a layer is computed as the derivative of both the
         # local activation and the weighted sum of the derivatives in the
         # deeper layer.
-        backward = self.network.backward(delta_right, weight)
+        backward = self.network.backward(weight, delta_right)
         local = layer.delta()
         assert len(layer) == len(backward) == len(local)
         return backward * local
