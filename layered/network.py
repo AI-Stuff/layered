@@ -80,14 +80,28 @@ class Matrices:
             assert value.shape == self.flat.shape
         super().__setattr__(name, value)
 
-    def __sub__(self, other):
-        assert self.shapes == other.shapes
-        return Matrices(self.shapes, self.flat - other.flat)
+    def __add__(self, other):
+        return self._operation(other, lambda x, y: x + y)
 
-    def __mul__(self, scalar):
-        return Matrices(self.shapes, self.flat * scalar)
+    def __sub__(self, other):
+        return self._operation(other, lambda x, y: x - y)
+
+    def __mul__(self, other):
+        return self._operation(other, lambda x, y: x * y)
+
+    def __truediv__(self, other):
+        return self._operation(other, lambda x, y: x / y)
 
     __rmul__ = __mul__
+
+    __radd__ = __add__
+
+    def _operation(self, other, operation):
+        try:
+            other = other.flat
+        except:
+            pass
+        return Matrices(self.shapes, operation(self.flat, other))
 
     def _locate(self, index):
         if index < 0:

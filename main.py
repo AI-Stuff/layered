@@ -26,10 +26,19 @@ def batched(iterable, size):
     yield batch
 
 
+def average(batch, callable_):
+    overall = None
+    for element in batch:
+        current = callable_(element)
+        overall = overall + current if overall else current
+    return overall / len(batch)
+
+
 if __name__ == '__main__':
-    print('Loading dataset')
+    print('Load dataset')
     dataset = Mnist()
 
+    print('Initialize')
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
         Layer(700, Relu),
@@ -37,17 +46,18 @@ if __name__ == '__main__':
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
     weights = Matrices(network.shapes)
-
     cost = Squared()
     backprop = Backpropagation(network, cost)
     decent = GradientDecent()
     plot = Plot()
 
     print('Start training')
-    for round_ in range(10):
+    for round_ in range(5):
         print('Round', round_)
-        for example in dataset.training:
-            gradient = backprop(weights, example)
-            weights = decent(weights, gradient, learning_rate=0.1)
-            plot(cost(network.feed(weights, example.data), example.target))
+        for batch in batched(dataset.training, 10):
+            gradient = average(batch, lambda x: backprop(weights, x))
+            weights = decent(weights, gradient, learning_rate=1)
+            error = average(batch, lambda x: cost(network.feed(weights,
+                x.data), x.target).mean())
+            plot(error)
         evaluation(network, weights, dataset.testing)

@@ -9,7 +9,7 @@ class Gradient:
         self.network = network
         self.cost = cost
 
-    def __call__(self, weights, examples):
+    def __call__(self, weights, example):
         raise NotImplemented
 
 
@@ -114,9 +114,9 @@ class CheckedBackpropagation(Gradient):
         self.analytic = Backpropagation(network, cost)
         self.numeric = NumericalGradient(network, cost, distance)
 
-    def __call__(self, weights, examples):
-        analytic = self.analytic(weights, examples)
-        numeric = self.numeric(weights, examples)
+    def __call__(self, weights, example):
+        analytic = self.analytic(weights, example)
+        numeric = self.numeric(weights, example)
         # Flatten the gradients so that we can compare their elements.
         analytic_flat = self._flatten(analytic)
         numeric_flat = self._flatten(numeric)
