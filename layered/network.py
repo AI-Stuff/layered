@@ -46,14 +46,15 @@ class Layer:
 
 class Matrices:
 
-    def __init__(self, shapes, flat=None):
+    def __init__(self, shapes, elements=None):
         self.shapes = shapes
         length = sum(x * y for x, y in shapes)
-        if flat is not None:
-            assert len(flat) == length
+        if elements is not None:
+            assert len(elements) == length
+            elements = elements.copy()
         else:
-            flat = np.zeros(length)
-        self.flat = flat
+            elements = np.zeros(length)
+        self.flat = elements
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -117,6 +118,9 @@ class Matrices:
         stop = slice_.stop if slice_.stop else len(self.shapes)
         step = slice_.step if slice_.step else 1
         return range(start, stop, step)
+
+    def __str__(self):
+        return str(len(self.flat)) + str(self.flat)
 
 
 class Network:

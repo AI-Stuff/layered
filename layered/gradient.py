@@ -63,9 +63,9 @@ class Backpropagation(Gradient):
         for index, (previous, delta) in enumerate(prev_and_delta):
             # We want to tweak the bias weights so we need them in the
             # gradient.
-            bias_and_activation = np.insert(previous.outgoing, 0, 1)
-            assert bias_and_activation[0] == 1
-            gradient[index] = np.outer(bias_and_activation, delta)
+            activations = np.insert(previous.outgoing, 0, 1)
+            assert activations[0] == 1
+            gradient[index] = np.outer(activations, delta)
         return gradient
 
 

@@ -23,7 +23,7 @@ def compute_cost(network, weights, examples):
 
 if __name__ == '__main__':
     print('Load dataset')
-    dataset = Classification(10000, 30, 5)
+    dataset = Mnist()
 
     network = Network([
         Layer(len(dataset.training[0].data), Linear),
@@ -32,18 +32,22 @@ if __name__ == '__main__':
         Layer(len(dataset.training[0].target), Sigmoid)
     ])
 
-    weights = Matrices(network.shapes)
+    num_weights = sum(x * y for x, y in network.shapes)
+    weights = Matrices(network.shapes, np.random.normal(0, 0.1, num_weights))
+
     cost = Squared()
     backprop = Backpropagation(network, cost)
     decent = GradientDecent()
-    # plot = Plot()
+    plot = Plot()
 
     print('Start training')
     examples = repeat(dataset.training, 5)
     for index, batch in enumerate(batched(examples, 2)):
         gradient = average(batch, lambda x: backprop(weights, x))
         weights = decent(weights, gradient, learning_rate=0.05)
+        for example in batch:
+            plot(cost(network.feed(weights, example.data), example.target))
         # plot(compute_cost(network, weights, batch))
-        if index + 1 % 1000 == 0:
-            print('Batch {:>5} test error {:.2f}%'.format(index + 1, 100 *
+        if (index + 1) % 1000 == 0:
+            print('Batch {} test error {:.2f}%'.format(index + 1, 100 *
                 compute_error(network, weights, dataset.testing)))

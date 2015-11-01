@@ -22,20 +22,21 @@ class Plot:
 
     def __call__(self, cost):
         cost = cost.sum()
-        self.max = max(self.max, cost)
         with self.lock:
+            if cost > self.max:
+                self.max = cost
+                self.ax.set_ylim(0, self.max)
             self.data.append(cost)
             self.li.set_ydata(self.data)
 
     def _init_plot(self):
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, xlabel='Example',
-            ylabel='Cost')
-        self.li, = self.ax.plot(np.arange(self.width), self.data,
-            **self.style)
+        self.ax = self.fig.add_subplot(111, xlabel='Example', ylabel='Cost')
+        self.li, = self.ax.plot(np.arange(self.width), self.data, **self.style)
+        self.ax.set_xlim(0, self.width)
+        self.ax.get_xaxis().set_ticks([])
         self.fig.canvas.draw()
         plt.show(block=False)
-        self.ax.set_xlim(0, self.width)
 
     def _init_update(self):
         self.lock = threading.Lock()
@@ -56,7 +57,6 @@ class Plot:
         while True:
             before = time.time()
             with self.lock:
-                self.ax.set_ylim(0, self.max)
                 self.fig.canvas.draw()
             duration = time.time() - before
             plt.pause(max(0, self.refresh - duration))

@@ -14,6 +14,20 @@ class MockGenerator:
             yield element
 
 
+class MockCustomOperators:
+
+    def __init__(self, value):
+        self.value = value
+
+    def __add__(self, other):
+        return MockCustomOperators(self.value + other.value)
+
+    __radd__ = __add__
+
+    def __truediv__(self, other):
+        return MockCustomOperators(self.value / other)
+
+
 class TestRepeat:
 
     def test_result(self):
@@ -52,3 +66,7 @@ class TestAverage:
     def test_result(self):
         assert average([1, 2, 3, 4], lambda x: x) == 2.5
         assert average([1, 2, 3, 4], lambda x: x ** 2) == 7.5
+
+    def test_custom_operators(self):
+        iterable = [MockCustomOperators(i) for i in range(1, 5)]
+        assert average(iterable, lambda x: x).value == 2.5
