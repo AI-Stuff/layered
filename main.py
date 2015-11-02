@@ -4,7 +4,7 @@ from layered.cost import Squared, CrossEntropy
 from layered.example import Example
 from layered.gradient import Backpropagation, CheckedBackpropagation
 from layered.network import Network, Layer, Matrices
-from layered.optimization import GradientDecent
+from layered.optimization import GradientDecent, Momentum, WeightDecay
 from layered.plot import Plot
 from layered.utility import repeat, batched, average, listify
 from layered.dataset import Regression, Classification, Mnist
@@ -37,8 +37,15 @@ def evaluate_every(index, problem, network, weights, testing):
 
 if __name__ == '__main__':
     # Define the problem
-    problem = Problem(training_rounds=5, batch_size=2, learning_rate=0.05,
-        evaluate_every=5000, weight_scale=0.1, dataset=Mnist(),
+    problem = Problem(
+        training_rounds=5,
+        batch_size=10,
+        learning_rate=0.1,
+        momentum=0.5,
+        weight_scale=0.1,
+        weight_decay=1e-4,
+        evaluate_every=5000,
+        dataset=Mnist(),
         cost=Squared())
 
     # Define model and initialize weights
@@ -54,6 +61,8 @@ if __name__ == '__main__':
     # Classes needed during training
     backprop = Backpropagation(network, problem.cost)
     decent = GradientDecent()
+    decay = WeightDecay()
+    momentum = Momentum()
     plot = Plot()
 
     # Train the model
@@ -62,6 +71,8 @@ if __name__ == '__main__':
     testing = problem.dataset.testing
     for index, batch in enumerate(batches):
         gradient = average(batch, lambda x: backprop(weights, x))
+        gradient = momentum(gradient, problem.momentum)
         weights = decent(weights, gradient, problem.learning_rate)
+        weights = decay(weights, problem.weight_decay)
         plot(compute_costs(network, weights, problem.cost, batch))
         evaluate_every(index, problem, network, weights, testing)

@@ -81,6 +81,9 @@ class Matrices:
             assert value.shape == self.flat.shape
         super().__setattr__(name, value)
 
+    def copy(self):
+        return Matrices(self.shapes, self.flat.copy())
+
     def __add__(self, other):
         return self._operation(other, lambda x, y: x + y)
 
