@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
 
 class Plot:
 
-    def __init__(self, refresh=0.1, width=1000, **kwargs):
+    def __init__(self, refresh=0.5, width=1000, **kwargs):
         self.refresh = refresh
         self.width = width
         self.data = collections.deque([None] * self.width, maxlen=width)
@@ -60,4 +60,4 @@ class Plot:
             with self.lock:
                 self.fig.canvas.draw()
             duration = time.time() - before
-            plt.pause(max(0, self.refresh - duration))
+            plt.pause(max(0.001, self.refresh - duration))

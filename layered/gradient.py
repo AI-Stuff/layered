@@ -1,6 +1,9 @@
+import functools
+import multiprocessing
 import numpy as np
 from layered.network import Network, Matrices
 from layered.cost import Cost
+from layered.utility import batched
 
 
 class Gradient:
@@ -13,10 +16,7 @@ class Gradient:
         raise NotImplemented
 
 
-class Backpropagation(Gradient):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Backprop(Gradient):
 
     def __call__(self, weights, example):
         prediction = self.network.feed(weights, example.data)
@@ -106,12 +106,12 @@ class NumericalGradient(Gradient):
         return cost.sum()
 
 
-class CheckedBackpropagation(Gradient):
+class CheckedBackprop(Gradient):
 
     def __init__(self, network, cost, distance=1e-5, tolerance=1e-8):
         self.tolerance = tolerance
         super().__init__(network, cost)
-        self.analytic = Backpropagation(network, cost)
+        self.analytic = Backprop(network, cost)
         self.numeric = NumericalGradient(network, cost, distance)
 
     def __call__(self, weights, example):
@@ -130,3 +130,30 @@ class CheckedBackpropagation(Gradient):
 
     def _flatten(self, gradient):
         return np.hstack(np.array(list(x.flatten() for x in gradient)))
+
+
+class BatchBackprop:
+
+    def __init__(self, network, cost):
+        self.backprop = Backprop(network, cost)
+
+    def __call__(self, weights, examples):
+        gradient = Matrices(weights.shapes)
+        for example in examples:
+            gradient += self.backprop(weights, example)
+        return gradient / len(examples)
+
+
+class ParallelBackprop:
+
+    def __init__(self, network, cost, workers=4):
+        self.backprop = BatchBackprop(network, cost)
+        self.workers = workers
+        self.pool = multiprocessing.Pool(self.workers)
+
+    def __call__(self, weights, examples):
+        batch_size = (len(examples) + self.workers - 1) // self.workers
+        batches = list(batched(examples, batch_size))
+        compute = functools.partial(self.backprop, weights)
+        gradients = self.pool.map(compute, batches)
+        return sum(gradients) / batch_size

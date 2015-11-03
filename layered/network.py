@@ -73,7 +73,8 @@ class Matrices:
 
     def __getattr__(self, name):
         # Tunnel not found properties to the underlying array.
-        return getattr(self.flat, name)
+        flat = super().__getattribute__('flat')
+        return getattr(flat, name)
 
     def __setattr_(self, name, value):
         # Ensure that the size of the underlying array doesn't change.

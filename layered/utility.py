@@ -3,7 +3,7 @@ import numpy as np
 from layered.network import Example
 
 
-def repeat(iterable, times):
+def repeated(iterable, times):
     for _ in range(times):
         yield from iterable
 
@@ -19,7 +19,7 @@ def batched(iterable, size):
         yield batch
 
 
-def average(batch, callable_):
+def averaged(batch, callable_):
     overall = None
     for element in batch:
         current = callable_(element)
