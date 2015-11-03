@@ -1,7 +1,7 @@
 [![Code Climate][1]][2]
 
-[1]: https://codeclimate.com/github/danijar/neural-network/badges/gpa.svg
-[2]: https://codeclimate.com/github/danijar/neural-network
+[1]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
+[2]: https://codeclimate.com/github/danijar/layered
 
 Layered Neural Network
 ======================
@@ -19,49 +19,115 @@ but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-If you have Numpy and Matplotlib for Python 3 installed on your machine, you
-can just run this command. To tweak parameters of the networks like changing
-activation functions or number of layers just edit this file.
+If you have Matplotlib for Python 3 installed on your machine, you can just run
+this command. To tweak the network and problem definition, just edit the same
+file.
 
 ```bash
 python3 main.py
 ```
 
-Features
---------
+Quick Start
+-----------
 
-This repository provides implementations for a layered neural network,
-activation functions, cost functions and different optimization algorithms. All
-those are implemented in an object-oriented design so that alternatives can be
-added easily. There are also two generated toy problems for the networks to
-learn.
+### Network Definition
 
-### Activation functions
+A network is defined by it's layers. The parameters for a layer are the amount
+of neurons and the activation function. The first layer has a linear activation
+since the input layer shouldn't transform the data.
 
-| Function | Definition | Graph |
-| -------- | :--------: | ----- |
-| Linear | x | ![Linear activation](image/linear.png) |
-| Sigmoid or logistic | 1 / (1 + exp(-x)) | ![Sigmoid activation](image/sigmoid.png) |
-| Relu | max(0, x) | ![Relu activation](image/relu.png) |
+```python
+from layered.network import Network
+from layered.activation import Linear, Relu, Sigmoid
 
-### Cost functions
+network = Network([
+    Layer(num_inputs, Linear),
+    Layer(700, Relu),
+    Layer(500, Relu),
+    Layer(300, Relu),
+    Layer(num_outputs, Sigmoid)
+])
+```
+### Activation Functions
 
-| Function | Definition | Graph |
-| -------- | :--------: | ----- |
-| Squared | (prediction - target) ^ 2 / 2 | ![Squared cost](image/squared.png) |
-| Cross Entropy | -((target * log(prediction)) + (1 - target) * log(1 - prediction)) | ![Cross Entropy cost](image/cross-entropy.png) |
+| Function | Definition | Derivative | Graph |
+| -------- | :--------: | :--------: | ----- |
+| Linear | x | 1 | ![Linear activation](image/linear.png) |
+| Sigmoid | 1 / (1 + exp(-x)) | y * (1 - y) | ![Sigmoid activation](image/sigmoid.png) |
+| Relu | max(0, x) | 1 if x > 0 else 0 | ![Relu activation](image/relu.png) |
 
-### Optimization algorithms
+### Weight Initialization
 
-- Stochastic gradient decent
-- Batch gradient decent
-- Mini batch gradient decent
+Then we create the weights matrices for the network. We'll hand the this object
+to algorithms like backpropagation, gradient decent and weight decay.
 
-### Gradient algorithms
+If the initial weights of a neural network would be zero, no activation would
+be passed to the deeper layers. So we set them to random values of a normal
+distribution.
 
-- Backpropagation
-- Numerical gradient
-- Checked gradient
+```python
+from layered.network import Matrices
+
+weights = Matrices(network.shapes)
+weights.flat = np.random.normal(0, weight_scale, len(weights.flat))
+```
+
+### Optimization Methods
+
+We want to learn good weights using backpropagation and gradient decent.
+Therefore, the classes for this can be imported from the `gradient` and
+`optimization` modules. We also need to decide for a cost function here.
+
+```python
+from layered.cost import Squared
+from layered.gradient import Backprop
+from layered.optimization import GradientDecent
+
+backprop = ParallelBackprop(network, cost=Squared())
+decent = GradientDecent()
+```
+
+### Gradient Algorithms
+
+- Backprop
+- BatchBackprop
+- ParallelBackprop
+- NumericalGradient
+- CheckedBackprop
+
+### Cost Functions
+
+| Function | Definition | Derivative | Graph |
+| -------- | :--------: | :--------: | ----- |
+| Squared | (pred - target) ^ 2 / 2 | | ![Squared cost](image/squared.png) |
+| CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | | ![Cross Entropy cost](image/cross-entropy.png) |
+
+### Dataset and Training
+
+Download the four files of the MNIST dataset from Yan LeCun's website.
+
+```python
+from layered.dataset import Mnist
+
+dataset = Mnist('dataset/mnist')
+for example dataset.training:
+    gradient = backprop(network, cost)
+    weights = decent(weights, gradient, learning_rate=0.1)
+```
+
+### Evaluation
+
+Then evaluate the learned weights on the testing examples.
+
+```python
+import numpy as np
+from layered.utility import averaged
+
+error = averaged(examples, lambda x:
+    float(np.argmax(x.target) !=
+    np.argmax(network.feed(weights, x.data))))
+print('Testing error', round(100 * error), '%')
+```
 
 Contribution
 ------------
