@@ -49,11 +49,17 @@ class Softmax(Activation):
 
     @staticmethod
     def apply(incoming):
-        exp = np.exp(incoming)
-        return exp / np.sum(exp)
+        exps = np.exp(incoming)
+        return exps / exps.sum()
 
     @staticmethod
-    def delta(incoming, outgoing):
+    def delta_1(incoming, outgoing):
         others = np.dot(-outgoing, outgoing) - (-outgoing * outgoing)
         current = outgoing * (1 - outgoing)
         return others + current
+
+    @staticmethod
+    def delta_2(incoming, outgoing):
+        exps = np.exp(incoming)
+        others = exps.sum() - exps
+        return 1 / (2 + exps / others + others / exps)

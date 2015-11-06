@@ -27,14 +27,42 @@ file.
 python3 main.py
 ```
 
+Problem Definition
+------------------
+
+Learning problems are defined in YAML. Here is an example for classifying
+handwritten digits.
+
+```yaml
+dataset: Mnist
+cost: Squared
+layers:
+  - size: 784
+    activation: Linear
+  - size: 500
+    activation: Relu
+  - size: 300
+    activation: Relu
+  - size: 10
+    activation: Sigmoid
+training_rounds: 5
+batch_size: 10
+learning_rate: 0.25
+momentum: 0.3
+weight_scale: 0.01
+weight_decay: 1e-3
+evaluate_every: 5000
+```
+
 Quick Start
 -----------
 
 ### Network Definition
 
-A network is defined by it's layers. The parameters for a layer are the amount
-of neurons and the activation function. The first layer has a linear activation
-since the input layer shouldn't transform the data.
+In this guide you will learn how to create and train models manually. A network
+is defined by it's layers. The parameters for a layer are the amount of neurons
+and the activation function. The first layer has a linear activation since the
+input layer shouldn't transform the data.
 
 ```python
 from layered.network import Network

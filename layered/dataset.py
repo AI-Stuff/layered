@@ -20,7 +20,7 @@ class Dataset:
 
 class Regression(Dataset):
 
-    def __init__(self, amount, inputs=10):
+    def __init__(self, amount=10000, inputs=10):
         data = np.random.rand(amount, inputs)
         products = np.prod(data, axis=1)
         products = products / np.max(products)
@@ -33,7 +33,7 @@ class Regression(Dataset):
 
 class Classification(Dataset):
 
-    def __init__(self, amount, inputs=10, classes=3):
+    def __init__(self, amount=10000, inputs=50, classes=5):
         data = np.random.randint(0, 1000, (amount, inputs))
         mods = np.mod(np.sum(data, axis=1), classes)
         data = data.astype(float) / data.max()
@@ -80,4 +80,3 @@ class Mnist(Dataset):
             interpolation='nearest')
         print('Target:', example.target)
         pylab.show()
-

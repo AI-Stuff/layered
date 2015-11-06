@@ -1,5 +1,5 @@
 import pytest
-from layered.utility import repeat, batched, average
+from layered.utility import repeated, batched, averaged
 
 
 class MockGenerator:
@@ -28,18 +28,18 @@ class MockCustomOperators:
         return MockCustomOperators(self.value / other)
 
 
-class TestRepeat:
+class TestRepeated:
 
     def test_result(self):
         iterable = range(14)
-        repeated = repeat(iterable, 3)
-        assert list(repeated) == list(iterable) * 3
+        repeates = repeated(iterable, 3)
+        assert list(repeates) == list(iterable) * 3
 
     def test_generator(self):
         iterable = MockGenerator([1, 2, 3])
-        repeated = repeat(iterable, 3)
+        repeates = repeated(iterable, 3)
         assert iterable.evaluated == 0
-        list(repeated)
+        list(repeates)
         assert iterable.evaluated == 3 * 3
 
 
@@ -61,12 +61,12 @@ class TestBatched:
         assert iterable.evaluated == 3
 
 
-class TestAverage:
+class TestAveraged:
 
     def test_result(self):
-        assert average([1, 2, 3, 4], lambda x: x) == 2.5
-        assert average([1, 2, 3, 4], lambda x: x ** 2) == 7.5
+        assert averaged([1, 2, 3, 4], lambda x: x) == 2.5
+        assert averaged([1, 2, 3, 4], lambda x: x ** 2) == 7.5
 
     def test_custom_operators(self):
         iterable = [MockCustomOperators(i) for i in range(1, 5)]
-        assert average(iterable, lambda x: x).value == 2.5
+        assert averaged(iterable, lambda x: x).value == 2.5

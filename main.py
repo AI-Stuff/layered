@@ -1,19 +1,11 @@
 import numpy as np
-from layered.activation import Linear, Sigmoid, Relu, Softmax
-from layered.cost import Squared, CrossEntropy
-from layered.example import Example
-from layered.gradient import BatchBackprop, ParallelBackprop
-from layered.network import Network, Layer, Matrices
+from layered.problem import Problem
+from layered.gradient import BatchBackprop, ParallelBackprop, CheckedBackprop
+from layered.network import Network, Matrices
 from layered.optimization import GradientDecent, Momentum, WeightDecay
 from layered.plot import Plot
 from layered.utility import repeated, batched, averaged, listify
 from layered.dataset import Regression, Classification, Mnist
-
-
-class Problem:
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
 
 
 def compute_error(network, weights, examples):
@@ -39,26 +31,11 @@ def evaluate(index, network, weights, testing):
 
 
 if __name__ == '__main__':
-    # Define the problem
-    problem = Problem(
-        training_rounds=20,
-        batch_size=100,
-        learning_rate=1.2,
-        momentum=0.3,
-        weight_scale=0.01,
-        weight_decay=1e-3,
-        evaluate_every=5000,
-        dataset=Mnist(),
-        cost=Squared())
+    # The problem defines dataset, network and learning parameters
+    problem = Problem('problem/example.yaml')
 
     # Define model and initialize weights
-    network = Network([
-        Layer(len(problem.dataset.training[0].data), Linear),
-        Layer(700, Relu),
-        Layer(500, Relu),
-        Layer(300, Relu),
-        Layer(len(problem.dataset.training[0].target), Sigmoid)
-    ])
+    network = Network(problem.layers)
     weights = Matrices(network.shapes)
     weights.flat = np.random.normal(0, problem.weight_scale, len(weights.flat))
 

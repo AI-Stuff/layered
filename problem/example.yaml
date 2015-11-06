@@ -1,0 +1,18 @@
+dataset: Mnist
+cost: Squared
+layers:
+  - size: 784
+    activation: Linear
+  - size: 500
+    activation: Relu
+  - size: 300
+    activation: Relu
+  - size: 10
+    activation: Sigmoid
+training_rounds: 5
+batch_size: 10
+learning_rate: 0.1
+momentum: 0.3
+weight_scale: 0.01
+weight_decay: 1e-3
+evaluate_every: 10000

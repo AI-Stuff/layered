@@ -117,19 +117,13 @@ class CheckedBackprop(Gradient):
     def __call__(self, weights, example):
         analytic = self.analytic(weights, example)
         numeric = self.numeric(weights, example)
-        # Flatten the gradients so that we can compare their elements.
-        analytic_flat = self._flatten(analytic)
-        numeric_flat = self._flatten(numeric)
-        distances = np.absolute(analytic_flat - numeric_flat)
-        worst = distances.max() / np.absolute(numeric_flat).max()
+        distances = np.absolute(analytic.flat - numeric.flat)
+        worst = distances.max()
         if worst > self.tolerance:
             print('Gradient differs by {:.2f}%'.format(100 * worst))
         else:
             print('Gradient looks good')
         return analytic
-
-    def _flatten(self, gradient):
-        return np.hstack(np.array(list(x.flatten() for x in gradient)))
 
 
 class BatchBackprop:

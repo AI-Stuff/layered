@@ -1,7 +1,6 @@
 import operator
 import numpy as np
 from layered.example import Example
-from layered.utility import hstack_lines
 
 
 class Layer:
