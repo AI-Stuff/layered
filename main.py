@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 from layered.problem import Problem
 from layered.gradient import BatchBackprop, ParallelBackprop, CheckedBackprop
@@ -32,7 +33,11 @@ def evaluate(index, network, weights, testing):
 
 if __name__ == '__main__':
     # The problem defines dataset, network and learning parameters
-    problem = Problem('problem/example.yaml')
+    parser = argparse.ArgumentParser('layered')
+    parser.add_argument('problem', nargs='?', default='problem/example.yaml',
+        help='path to the YAML problem definition')
+    args = parser.parse_args()
+    problem = Problem(args.problem)
 
     # Define model and initialize weights
     network = Network(problem.layers)

@@ -3,6 +3,8 @@ cost: Squared
 layers:
   - size: 784
     activation: Linear
+  - size: 700
+    activation: Relu
   - size: 500
     activation: Relu
   - size: 300
@@ -11,7 +13,7 @@ layers:
     activation: Sigmoid
 training_rounds: 5
 batch_size: 10
-learning_rate: 0.1
+learning_rate: 0.5
 momentum: 0.3
 weight_scale: 0.01
 weight_decay: 1e-3

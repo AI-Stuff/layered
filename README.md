@@ -19,19 +19,15 @@ but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-If you have Matplotlib for Python 3 installed on your machine, you can just run
-this command. To tweak the network and problem definition, just edit the same
-file.
+If you have Matplotlib for Python 3 installed on your machine, download the
+MNIST dataset into `dataset/mnist/` and run this command. It will start
+training a network to classify handwritten digits.
 
 ```bash
-python3 main.py
+python3 main.py problem/example.yaml
 ```
 
-Problem Definition
-------------------
-
-Learning problems are defined in YAML. Here is an example for classifying
-handwritten digits.
+Learning problems are defined in YAML. This is how the example file looks like.
 
 ```yaml
 dataset: Mnist
@@ -39,6 +35,8 @@ cost: Squared
 layers:
   - size: 784
     activation: Linear
+  - size: 700
+    activation: Relu
   - size: 500
     activation: Relu
   - size: 300
