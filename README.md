@@ -79,11 +79,12 @@ network = Network([
 ```
 ### Activation Functions
 
-| Function | Definition | Derivative | Graph |
-| -------- | :--------: | :--------: | ----- |
-| Linear | x | 1 | ![Linear activation](image/linear.png) |
-| Sigmoid | 1 / (1 + exp(-x)) | y * (1 - y) | ![Sigmoid activation](image/sigmoid.png) |
-| Relu | max(0, x) | 1 if x > 0 else 0 | ![Relu activation](image/relu.png) |
+| Function | Definition | Graph |
+| -------- | :--------: | ----- |
+| Linear | x | ![Linear](image/linear.png) |
+| Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
+| Relu | max(0, x) | ![Relu](image/relu.png) |
+| Softmax | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
 
 ### Weight Initialization
 
@@ -126,10 +127,10 @@ decent = GradientDecent()
 
 ### Cost Functions
 
-| Function | Definition | Derivative | Graph |
-| -------- | :--------: | :--------: | ----- |
-| Squared | (pred - target) ^ 2 / 2 | | ![Squared cost](image/squared.png) |
-| CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | | ![Cross Entropy cost](image/cross-entropy.png) |
+| Function | Definition | Graph |
+| -------- | :--------: | ----- |
+| Squared | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
+| CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | ![Cross Entropy](image/cross-entropy.png) |
 
 ### Dataset and Training
 
