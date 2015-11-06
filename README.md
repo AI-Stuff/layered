@@ -11,10 +11,10 @@ neural networks in Python 3 under the MIT license. It's part of my efforts to
 understand the concepts of deep learning.
 
 You can use this repository when doing your own implementation of neural
-networks which I highly recommend if you are interested in understanding them.
-It makes sure you correctly understand all the details. For example, I had a
-small misunderstanding of the backpropagation formula. My network still trained
-but I found the mistake by numerical gradient checking.
+networks what I highly recommend if you are interested in understanding them.
+It's a good way to build intuition and allows you to verify your understanding.
+For example, I had a small misunderstanding of the backpropagation formula. My
+network still trained but I found the mistake by numerical gradient checking.
 
 Instructions
 ------------
@@ -60,7 +60,7 @@ Quick Start
 In this guide you will learn how to create and train models manually. A network
 is defined by it's layers. The parameters for a layer are the amount of neurons
 and the activation function. The first layer has a linear activation since the
-input layer shouldn't transform the data.
+input data shouldn't be transformed directly.
 
 ```python
 from layered.network import Network
@@ -84,11 +84,11 @@ network = Network([
 
 ### Weight Initialization
 
-Then we create the weights matrices for the network. We'll hand the this object
-to algorithms like backpropagation, gradient decent and weight decay.
+The weight matrices of the network are handed to algorithms like
+backpropagation, gradient decent and weight decay.
 
 If the initial weights of a neural network would be zero, no activation would
-be passed to the deeper layers. So we set them to random values of a normal
+be passed to the deeper layers. So we start with random values of a normal
 distribution.
 
 ```python
@@ -100,9 +100,9 @@ weights.flat = np.random.normal(0, weight_scale, len(weights.flat))
 
 ### Optimization Methods
 
-We want to learn good weights using backpropagation and gradient decent.
-Therefore, the classes for this can be imported from the `gradient` and
-`optimization` modules. We also need to decide for a cost function here.
+Not let's learn good weights with backpropagation and gradient decent.  The
+classes for this can be imported from the `gradient` and `optimization`
+modules. We also need to decide for a cost function.
 
 ```python
 from layered.cost import Squared
