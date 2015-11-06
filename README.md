@@ -1,7 +1,10 @@
-[![Code Climate][1]][2]
+[![Build Status][1]][2]
+[![Code Climate][3]][4]
 
-[1]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
-[2]: https://codeclimate.com/github/danijar/layered
+[1]: https://travis-ci.org/danijar/layered.svg
+[2]: https://travis-ci.org/danijar/layered
+[3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
+[4]: https://codeclimate.com/github/danijar/layered
 
 Layered Neural Network
 ======================

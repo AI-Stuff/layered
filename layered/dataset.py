@@ -76,7 +76,7 @@ class Mnist(Dataset):
 
     def show(self, example):
         import pylab
-        pylab.imshow(example.data.reshape(28, 28), cmap=pylab.cm.gray,
-            interpolation='nearest')
+        options = {'cmap': pylab.cm.gray, 'interpolation': 'nearest'}
+        pylab.imshow(example.data.reshape(28, 28), **options)
         print('Target:', example.target)
         pylab.show()

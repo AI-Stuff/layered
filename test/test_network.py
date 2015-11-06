@@ -12,7 +12,7 @@ class TestMatrices:
 
     def test_get_item(self):
         matrices = Matrices([(5, 8), (4, 2)])
-        assert matrices[0][4,2] == 0
+        assert matrices[0][4, 2] == 0
 
     def test_negative_indices(self):
         matrices = Matrices([(5, 8), (4, 2)])
@@ -22,8 +22,8 @@ class TestMatrices:
 
     def test_number_assignment(self):
         matrices = Matrices([(5, 8), (4, 2)])
-        matrices[0][4,5] = 42
-        assert matrices[0][4,5] == 42
+        matrices[0][4, 5] = 42
+        assert matrices[0][4, 5] == 42
 
     def test_matrix_assignment(self):
         matrices = Matrices([(5, 8), (4, 2)])

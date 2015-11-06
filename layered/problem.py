@@ -28,7 +28,8 @@ class Problem:
         self._load_definition(definition)
         self._load_symbols()
         self._load_layers()
-        assert not definition, ('unknown properties {} in problem definition'
+        assert not definition, (
+            'unknown properties {} in problem definition'
             .format(', '.join(definition.keys())))
 
     def _load_definition(self, definition):

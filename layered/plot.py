@@ -30,8 +30,8 @@ class Plot:
 
     def _init_plot(self):
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111,
-            xlabel='Training example', ylabel='Cost')
+        self.ax = self.fig.add_subplot(
+            111, xlabel='Training example', ylabel='Cost')
         self.li, = self.ax.plot(np.arange(self.width), self.data, **self.style)
         self.ax.set_xlim(0, self.width)
         self.ax.get_xaxis().set_ticks([])
