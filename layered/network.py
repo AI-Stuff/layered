@@ -8,7 +8,7 @@ class Layer:
     def __init__(self, size, activation):
         assert isinstance(size, int) and size
         self.size = size
-        self.activation = activation
+        self.activation = activation()
         self.incoming = np.zeros(size)
         self.outgoing = np.zeros(size)
         assert len(self.incoming) == len(self.outgoing) == self.size
@@ -32,15 +32,15 @@ class Layer:
         """
         assert len(incoming) == self.size
         self.incoming = incoming
-        outgoing = self.activation.apply(self.incoming)
+        outgoing = self.activation(self.incoming)
         assert len(outgoing) == self.size
         self.outgoing = outgoing
 
-    def delta(self):
+    def delta(self, above):
         """
         The derivative of the activation function at the current state.
         """
-        return self.activation.delta(self.incoming, self.outgoing)
+        return self.activation.delta(self.incoming, self.outgoing, above)
 
 
 class Matrices:

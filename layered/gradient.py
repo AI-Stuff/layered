@@ -20,39 +20,40 @@ class Backprop(Gradient):
 
     def __call__(self, weights, example):
         prediction = self.network.feed(weights, example.data)
-        delta_layers = self._delta_layers(weights, prediction, example.target)
+        delta_output = self._delta_output(prediction, example.target)
+        delta_layers = self._delta_layers(weights, delta_output)
         delta_weights = self._delta_weights(delta_layers)
         return delta_weights
 
-    def _delta_layers(self, weights, prediction, target):
+    def _delta_output(self, prediction, target):
         assert len(target) == self.network.layers[-1].size
-        # We start with the gradient at the output layer.
-        gradient = [self._delta_output(prediction, target)]
+        # The derivative with respect to the output layer is computed as the
+        # product of error derivative and local derivative at the layer.
+        delta_cost = self.cost.delta(prediction, target)
+        delta_output = self.network.layers[-1].delta(delta_cost)
+        assert len(delta_cost) == len(delta_output) == len(target)
+        return delta_output
+
+    def _delta_layers(self, weights, delta_output):
         # Propagate backwards through the hidden layers but not the input
         # layer. The current weight matrix is the one to the right of the
         # current layer.
+        gradient = [delta_output]
         hidden = list(zip(weights[1:], self.network.layers[1:-1]))
         assert all(x.shape[0] - 1 == len(y) for x, y in hidden)
         for weight, layer in reversed(hidden):
-            gradient.append(self._delta_hidden(layer, weight, gradient[-1]))
+            delta = self._delta_layer(layer, weight, gradient[-1])
+            gradient.append(delta)
         return reversed(gradient)
 
-    def _delta_output(self, prediction, target):
-        # The derivative with respect to the output layer is computed as the
-        # product of error derivative and local derivative at the layer.
-        cost = self.cost.delta(prediction, target)
-        local = self.network.layers[-1].delta()
-        assert len(cost) == len(local)
-        return cost * local
-
-    def _delta_hidden(self, layer, weight, delta_right):
+    def _delta_layer(self, layer, weight, above):
         # The gradient at a layer is computed as the derivative of both the
         # local activation and the weighted sum of the derivatives in the
         # deeper layer.
-        backward = self.network.backward(weight, delta_right)
-        local = layer.delta()
-        assert len(layer) == len(backward) == len(local)
-        return backward * local
+        backward = self.network.backward(weight, above)
+        delta = layer.delta(backward)
+        assert len(layer) == len(backward) == len(delta)
+        return delta
 
     def _delta_weights(self, delta_layers):
         # The gradient with respect to the weights is computed as the gradient

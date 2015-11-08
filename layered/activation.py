@@ -3,63 +3,57 @@ import numpy as np
 
 class Activation:
 
-    @staticmethod
-    def apply(incoming):
+    def __call__(self, incoming):
         raise NotImplemented
 
-    @staticmethod
-    def delta(incoming, outgoing):
+    def delta(self, incoming, outgoing, above):
+        """
+        Compute the derivative of the cost with respect to the input of this
+        activation function. Outgoing is what this function returned in the
+        forward pass and above is the derivative of the cost with respect to
+        the outgoing activation.
+        """
         raise NotImplemented
-
-
-class Sigmoid(Activation):
-
-    @staticmethod
-    def apply(incoming):
-        return 1 / (1 + np.exp(-incoming))
-
-    @staticmethod
-    def delta(incoming, outgoing):
-        return outgoing * (1 - outgoing)
 
 
 class Linear(Activation):
 
-    @staticmethod
-    def apply(incoming):
+    def __call__(self, incoming):
         return incoming
 
-    @staticmethod
-    def delta(incoming, outgoing):
-        return np.ones(incoming.shape).astype(float)
+    def delta(self, incoming, outgoing, above):
+        delta = np.ones(incoming.shape).astype(float)
+        return delta * above
+
+
+class Sigmoid(Activation):
+
+    def __call__(self, incoming):
+        return 1 / (1 + np.exp(-incoming))
+
+    def delta(self, incoming, outgoing, above):
+        delta = outgoing * (1 - outgoing)
+        return delta * above
 
 
 class Relu(Activation):
 
-    @staticmethod
-    def apply(incoming):
+    def __call__(self, incoming):
         return np.maximum(incoming, 0)
 
-    @staticmethod
-    def delta(incoming, outgoing):
-        return np.greater(incoming, 0).astype(float)
+    def delta(self, incoming, outgoing, above):
+        delta = np.greater(incoming, 0).astype(float)
+        return delta * above
 
 
 class Softmax(Activation):
 
-    @staticmethod
-    def apply(incoming):
+    def __call__(self, incoming):
         exps = np.exp(incoming)
         return exps / exps.sum()
 
-    @staticmethod
-    def delta_1(incoming, outgoing):
-        others = np.dot(-outgoing, outgoing) - (-outgoing * outgoing)
-        current = outgoing * (1 - outgoing)
-        return others + current
-
-    @staticmethod
-    def delta_2(incoming, outgoing):
-        exps = np.exp(incoming)
-        others = exps.sum() - exps
-        return 1 / (2 + exps / others + others / exps)
+    def delta(self, incoming, outgoing, above):
+        delta = outgoing * above
+        sum_ = delta.sum(axis=delta.ndim - 1, keepdims=True)
+        delta -= outgoing * sum_
+        return delta
