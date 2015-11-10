@@ -1,3 +1,4 @@
+import os
 import argparse
 import numpy as np
 from layered.problem import Problem
@@ -41,6 +42,7 @@ if __name__ == '__main__':
         dest='visual', action='store_false',
         help='show a diagram of training costs')
     args = parser.parse_args()
+    print('Problem', os.path.split(args.problem)[1])
     problem = Problem(args.problem)
 
     # Define model and initialize weights

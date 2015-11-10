@@ -1,5 +1,5 @@
 dataset: Mnist
-cost: Squared
+cost: CrossEntropy
 layers:
   - activation: Linear
     size: 784

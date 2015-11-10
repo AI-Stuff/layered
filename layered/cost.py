@@ -21,13 +21,16 @@ class Squared(Cost):
 
 class CrossEntropy(Cost):
 
+    def __init__(self, epsilon=1e-11):
+        self.epsilon = epsilon
+
     def __call__(self, prediction, target):
-        epsilon = 1e-11
-        clipped = np.clip(prediction, epsilon, 1 - epsilon)
+        clipped = np.clip(prediction, self.epsilon, 1 - self.epsilon)
         cost = target * np.log(clipped) + (1 - target) * np.log(1 - clipped)
         return -cost
 
     def delta(self, prediction, target):
-        delta = (prediction - target) / (prediction - prediction ** 2)
+        denominator = np.maximum(prediction - prediction ** 2, self.epsilon)
+        delta = (prediction - target) / denominator
         assert delta.shape == target.shape == prediction.shape
         return delta
