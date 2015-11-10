@@ -34,8 +34,12 @@ def evaluate(index, network, weights, testing):
 if __name__ == '__main__':
     # The problem defines dataset, network and learning parameters
     parser = argparse.ArgumentParser('layered')
-    parser.add_argument('problem', nargs='?', default='problem/example.yaml',
+    parser.add_argument('problem',
+        nargs='?', default='problem/example.yaml',
         help='path to the YAML problem definition')
+    parser.add_argument('-n', '--no-visual',
+        dest='visual', action='store_false',
+        help='show a diagram of training costs')
     args = parser.parse_args()
     problem = Problem(args.problem)
 
@@ -49,7 +53,8 @@ if __name__ == '__main__':
     momentum = Momentum()
     decent = GradientDecent()
     decay = WeightDecay()
-    plot = Plot()
+    if args.visual:
+        plot = Plot()
 
     # Train the model
     repeats = repeated(problem.dataset.training, problem.training_rounds)
@@ -60,6 +65,7 @@ if __name__ == '__main__':
         weights = decent(weights, gradient, problem.learning_rate)
         weights = decay(weights, problem.weight_decay)
         # Show progress
-        plot(compute_costs(network, weights, problem.cost, batch))
+        if args.visual:
+            plot(compute_costs(network, weights, problem.cost, batch))
         every(problem.evaluate_every // problem.batch_size, index, evaluate,
             index, network, weights, problem.dataset.testing)
