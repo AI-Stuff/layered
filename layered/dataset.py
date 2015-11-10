@@ -33,7 +33,7 @@ class Regression(Dataset):
 
 class Classification(Dataset):
 
-    def __init__(self, amount=10000, inputs=50, classes=5):
+    def __init__(self, amount=1000, inputs=20, classes=5):
         data = np.random.randint(0, 1000, (amount, inputs))
         mods = np.mod(np.sum(data, axis=1), classes)
         data = data.astype(float) / data.max()

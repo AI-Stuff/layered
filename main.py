@@ -5,15 +5,10 @@ from layered.problem import Problem
 from layered.gradient import BatchBackprop, ParallelBackprop, CheckedBackprop
 from layered.network import Network, Matrices
 from layered.optimization import GradientDecent, Momentum, WeightDecay
-from layered.plot import Plot
-from layered.utility import repeated, batched, averaged, listify
+from layered.utility import repeated, batched
 from layered.dataset import Regression, Classification, Mnist
-
-
-def compute_error(network, weights, examples):
-    return averaged(examples, lambda x:
-        float(np.argmax(x.target) !=
-        np.argmax(network.feed(weights, x.data))))
+from layered.evaluation import Evaluator
+from layered.plot import Plot
 
 
 def compute_costs(network, weights, cost, examples):
@@ -22,25 +17,15 @@ def compute_costs(network, weights, cost, examples):
     return list(costs)
 
 
-def every(every, index, callable_, *args, **kwargs):
-    if (index + 1) % every == 0:
-        callable_(*args, **kwargs)
-
-
-def evaluate(index, network, weights, testing):
-    error = 100 * compute_error(network, weights, testing)
-    print('Batch {} test error {:.2f}%'.format(index + 1, error))
-
-
 if __name__ == '__main__':
     # The problem defines dataset, network and learning parameters
     parser = argparse.ArgumentParser('layered')
     parser.add_argument('problem',
-        nargs='?', default='problem/example.yaml',
+        nargs='?',
         help='path to the YAML problem definition')
     parser.add_argument('-n', '--no-visual',
         dest='visual', action='store_false',
-        help='show a diagram of training costs')
+        help='don\'t show a diagram of training costs')
     args = parser.parse_args()
     print('Problem', os.path.split(args.problem)[1])
     problem = Problem(args.problem)
@@ -57,6 +42,8 @@ if __name__ == '__main__':
     decay = WeightDecay()
     if args.visual:
         plot = Plot()
+    evaluator = Evaluator(network, problem.dataset.testing,
+        problem.evaluate_every)
 
     # Train the model
     repeats = repeated(problem.dataset.training, problem.training_rounds)
@@ -69,5 +56,5 @@ if __name__ == '__main__':
         # Show progress
         if args.visual:
             plot(compute_costs(network, weights, problem.cost, batch))
-        every(problem.evaluate_every // problem.batch_size, index, evaluate,
-            index, network, weights, problem.dataset.testing)
+        evaluator(index // problem.batch_size, weights)
+    print('Done')
