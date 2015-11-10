@@ -56,5 +56,5 @@ if __name__ == '__main__':
         # Show progress
         if args.visual:
             plot(compute_costs(network, weights, problem.cost, batch))
-        evaluator(index // problem.batch_size, weights)
+        evaluator(index * problem.batch_size, weights)
     print('Done')

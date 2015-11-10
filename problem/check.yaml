@@ -1,14 +1,16 @@
-dataset: Mnist
+dataset: Classification
 cost: CrossEntropy
 layers:
   - activation: Linear
-    size: 784
+    size: 20
+  - activation: Sigmoid
+    size: 50
   - activation: Softmax
-    size: 10
+    size: 5
 training_rounds: 1
 batch_size: 1
 learning_rate: 0.1
 momentum: 0
 weight_scale: 0.01
 weight_decay: 0
-evaluate_every: 1000
+evaluate_every: 200

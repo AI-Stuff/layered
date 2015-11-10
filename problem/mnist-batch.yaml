@@ -1,4 +1,4 @@
-# 2.66% (right)
+# 2.12%
 dataset: Mnist
 cost: CrossEntropy
 layers:
