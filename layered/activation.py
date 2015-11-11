@@ -49,7 +49,9 @@ class Relu(Activation):
 class Softmax(Activation):
 
     def __call__(self, incoming):
-        exps = np.exp(incoming)
+        # The constant doesn't change the expression but prevents overflows.
+        constant = np.max(incoming)
+        exps = np.exp(incoming - constant)
         return exps / exps.sum()
 
     def delta(self, incoming, outgoing, above):
