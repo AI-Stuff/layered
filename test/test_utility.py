@@ -1,4 +1,5 @@
 import pytest
+import random
 from layered.utility import repeated, batched, averaged
 
 
@@ -32,14 +33,14 @@ class TestRepeated:
 
     def test_result(self):
         iterable = range(14)
-        repeates = repeated(iterable, 3)
-        assert list(repeates) == list(iterable) * 3
+        repeats = repeated(iterable, 3)
+        assert list(repeats) == list(iterable) * 3
 
     def test_generator(self):
         iterable = MockGenerator([1, 2, 3])
-        repeates = repeated(iterable, 3)
+        repeats = repeated(iterable, 3)
         assert iterable.evaluated == 0
-        list(repeates)
+        list(repeats)
         assert iterable.evaluated == 3 * 3
 
 
@@ -70,3 +71,8 @@ class TestAveraged:
     def test_custom_operators(self):
         iterable = [MockCustomOperators(i) for i in range(1, 5)]
         assert averaged(lambda x: x, iterable).value == 2.5
+
+    def test_supports_booleans(self):
+        iterable = [True] * 5 + [False] * 5
+        random.shuffle(iterable)
+        assert averaged(lambda x: x, iterable) == 0.5
