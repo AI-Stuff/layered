@@ -64,9 +64,9 @@ class TestBatched:
 class TestAveraged:
 
     def test_result(self):
-        assert averaged([1, 2, 3, 4], lambda x: x) == 2.5
-        assert averaged([1, 2, 3, 4], lambda x: x ** 2) == 7.5
+        assert averaged(lambda x: x, [1, 2, 3, 4]) == 2.5
+        assert averaged(lambda x: x ** 2, [1, 2, 3, 4]) == 7.5
 
     def test_custom_operators(self):
         iterable = [MockCustomOperators(i) for i in range(1, 5)]
-        assert averaged(iterable, lambda x: x).value == 2.5
+        assert averaged(lambda x: x, iterable).value == 2.5

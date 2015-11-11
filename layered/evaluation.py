@@ -14,13 +14,13 @@ class Evaluator:
         if index < self.last_index + self.every:
             return
         self.last_index = index
-        error = 100 - 100 * self._accuracy(weights)
-        print('Batch {} test error {:.2f}%'.format(index + 1, error))
+        error = 1 - self._accuracy(weights)
+        print('Batch {} test error {:.2f}%'.format(index, 100 * error))
 
     def _accuracy(self, weights):
-        return averaged(self.examples, lambda x: self._predicts(weights, x))
+        predicts = lambda x: float(self._predicts(weights, x))
+        return averaged(predicts, self.examples)
 
     def _predicts(self, weights, example):
-        target = np.argmax(example.target)
-        prediction = np.argmax(self.network.feed(weights, example.data))
-        return target == prediction
+        prediction = self.network.feed(weights, example.data)
+        return np.argmax(prediction) == np.argmax(example.target)

@@ -19,7 +19,7 @@ def batched(iterable, size):
         yield batch
 
 
-def averaged(batch, callable_):
+def averaged(callable_, batch):
     overall = None
     for element in batch:
         current = callable_(element)
