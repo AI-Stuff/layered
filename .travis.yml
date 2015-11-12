@@ -4,10 +4,9 @@ python:
   - "3.4"
   - "3.3"
 install:
-  - pip install setuptools
-  - python setup.py install
+  - pip install -r requirement/core.txt
+  - pip install -r requirement/test.txt
 script:
   - python setup.py test
 after_success:
-  # Upload coverage reports of one build only
-  - if [[ $ENV == python=3.5* ]]; then coveralls; fi
+  - coveralls

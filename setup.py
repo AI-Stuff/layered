@@ -26,26 +26,6 @@ class TestCommand(setuptools.Command):
             sys.exit(error.returncode)
 
 
-install_requires = [
-    'PyYAML',
-    'numpy',
-    'matplotlib',
-]
-
-
-tests_require = [
-    'pep8',
-    'pytest',
-    'pytest-cov',
-    'coveralls',
-]
-
-
-cmdclass = {
-    'test': TestCommand,
-}
-
-
 setuptools.setup(
     name='layered',
     version='0.1.0',
@@ -55,6 +35,7 @@ setuptools.setup(
     author_email='mail@danijar.com',
     license='MIT',
     packages=['layered'],
-    install_requires=install_requires + tests_require,
-    cmdclass=cmdclass,
+    install_requires=open('requirement/core.txt').readlines(),
+    tests_require=open('requirement/test.txt').readlines(),
+    cmdclass={'test': TestCommand},
 )

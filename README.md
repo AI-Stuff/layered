@@ -22,13 +22,14 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-Optionally, create a virtual environment. Then run the install command. If you
+Optionally, create a virtual environment. Then install the dependencies. If you
 encounter errors, try installing `python3-matplotlib` or equivalent via your
 platform's package manager.
 
 ```bash
 virtualenv . -p python3 && source bin/activate
-python setup.py install
+pip install -r requirement/core.txt
+pip install -r requirement/user.txt
 ```
 
 Download the MNIST dataset into `dataset/mnist` and run this command. It will
@@ -64,16 +65,6 @@ momentum: 0.9
 weight_scale: 0.1
 weight_decay: 0
 evaluate_every: 5000
-```
-
-Contribution
-------------
-
-You are welcome to add new learning methods and other improvements to the
-library. Please check if the linter and tests are passing first.
-
-```bash
-python setup.py test
 ```
 
 Quick Start
@@ -178,6 +169,17 @@ error = averaged(examples, lambda x:
     float(np.argmax(x.target) !=
     np.argmax(network.feed(weights, x.data))))
 print('Testing error', round(100 * error), '%')
+```
+
+Contribution
+------------
+
+You are welcome to add new learning methods and other improvements to the
+library. Please check if the linter and tests are passing first.
+
+```bash
+pip install -r requirement/test.txt
+python setup.py test
 ```
 
 If you have questions, feel free to contact me.
