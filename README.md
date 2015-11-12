@@ -1,7 +1,7 @@
 [![Build Status][1]][2]
 [![Code Climate][3]][4]
 
-[1]: https://travis-ci.org/danijar/layered.svg
+[1]: https://travis-ci.org/danijar/layered.svg?branch=master
 [2]: https://travis-ci.org/danijar/layered
 [3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
 [4]: https://codeclimate.com/github/danijar/layered
