@@ -22,37 +22,58 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-If you have Matplotlib for Python 3 installed on your machine, download the
-MNIST dataset into `dataset/mnist/` and run this command. It will start
-training a network to classify handwritten digits.
+Optionally, create a virtual environment. Then run the install command. If you
+encounter errors, try installing `python3-matplotlib` or equivalent via your
+platform's package manager.
 
 ```bash
-python3 main.py problem/example.yaml
+virtualenv . -p python3 && source bin/activate
+python setup.py install
 ```
 
-Learning problems are defined in YAML. This is how the example file looks like.
+Download the MNIST dataset into `dataset/mnist` and run this command. It will
+start training a network to classify handwritten digits and regularly print
+evaluation results on the test examples. After a few minutes, the error should
+drop below 3%.
+
+```bash
+python main.py problem/mnist-batch.yaml
+```
+
+Learning problems are defined in YAML files. This is how the example file looks
+like.
 
 ```yaml
 dataset: Mnist
-cost: Squared
+cost: CrossEntropy
 layers:
-  - size: 784
-    activation: Linear
-  - size: 700
-    activation: Relu
-  - size: 500
-    activation: Relu
-  - size: 300
-    activation: Relu
-  - size: 10
-    activation: Sigmoid
+  - activation: Linear
+    size: 784
+  - activation: Relu
+    size: 700
+  - activation: Relu
+    size: 700
+  - activation: Relu
+    size: 400
+  - activation: Softmax
+    size: 10
 training_rounds: 5
-batch_size: 10
-learning_rate: 0.25
-momentum: 0.3
-weight_scale: 0.01
-weight_decay: 1e-3
+batch_size: 32
+learning_rate: 0.01
+momentum: 0.9
+weight_scale: 0.1
+weight_decay: 0
 evaluate_every: 5000
+```
+
+Contribution
+------------
+
+You are welcome to add new learning methods and other improvements to the
+library. Please check if the linter and tests are passing first.
+
+```bash
+python setup.py test
 ```
 
 Quick Start
@@ -159,7 +180,4 @@ error = averaged(examples, lambda x:
 print('Testing error', round(100 * error), '%')
 ```
 
-Contribution
-------------
-
-Feel free to file pull requests. If you have questions, you can ask me.
+If you have questions, feel free to contact me.
