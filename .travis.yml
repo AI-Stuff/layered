@@ -8,6 +8,6 @@ install:
   - pip install coveralls
 script:
   - pep8 layered test
-  - py.test test
+  - py.test --cov=layered test
 after_success:
-  - coveralls
+  - if [[ $ENV == python=3.5* ]]; then coveralls; fi
