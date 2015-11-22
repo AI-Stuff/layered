@@ -14,10 +14,10 @@ class Momentum:
     def __init__(self):
         self.previous = None
 
-    def __call__(self, gradient, decay=0.9):
+    def __call__(self, gradient, rate=0.9):
         if self.previous is None:
             self.previous = gradient.copy()
-        gradient = decay * self.previous + gradient
+        gradient = rate * self.previous + gradient
         self.previous = gradient
         return gradient.copy()
 

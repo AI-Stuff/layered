@@ -1,3 +1,5 @@
+import os
+import errno
 import functools
 import numpy as np
 from layered.network import Example
@@ -41,6 +43,14 @@ def listify(fn=None, wrapper=list):
         return listify_return
     return listify_return(fn)
 
+
+def ensure_folder(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            return
+        raise
 
 def hstack_lines(blocks, sep=' '):
     blocks = [x.split('\n') for x in blocks]

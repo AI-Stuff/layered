@@ -1,67 +1,141 @@
+from urllib.request import urlopen
 import array
 import gzip
 import os
+import shutil
 import struct
 import numpy as np
 from layered.example import Example
-from layered.utility import listify
+from layered.utility import ensure_folder
 
 
 class Dataset:
 
+    urls = []
+
     def __init__(self):
-        self.training = []
-        self.testing = []
+        if self._is_cached():
+            print('Load cached dataset')
+            self.load()
+        else:
+            filenames = [self.download(x) for x in type(self).urls]
+            self.training, self.testing = self.parse(*filenames)
+            self.dump()
+
+    @classmethod
+    def folder(cls):
+        name = cls.__name__.lower()
+        folder = os.path.join('dataset', name)
+        ensure_folder(folder)
+        return folder
+
+    def parse(self):
+        """
+        Subclass responsibility. The filenames of downloaded files will be
+        passed as individual parameters to this function. Therefore, it must
+        accept as many parameters as provided class-site urls. Should return a
+        tuple of training examples and testing examples.
+        """
+        raise NotImplementedError
+
+    def dump(self):
+        np.save(self._training_path(), self.training)
+        np.save(self._testing_path(), self.testing)
+
+    def load(self):
+        self.training = np.load(self._training_path())
+        self.testing = np.load(self._testing_path())
+
+    def download(self, url):
+        _, filename = os.path.split(url)
+        filename = os.path.join(self.folder(), filename)
+        print('Download', filename)
+        with urlopen(url) as response, open(filename, 'wb') as file_:
+            shutil.copyfileobj(response, file_)
+        return filename
 
     def split(self, examples, ratio=0.8):
+        """
+        Utility function that can be used within the parse() implementation of
+        sub classes to split a list of example into two lists for training and
+        testing.
+        """
         split = int(ratio * len(examples))
         return examples[:split], examples[split:]
+
+    def _is_cached(self):
+        if not os.path.exists(self._training_path()):
+            return False
+        if not os.path.exists(self._testing_path()):
+            return False
+        return True
+
+    def _training_path(self):
+        return os.path.join(self.folder(), 'training.npy')
+
+    def _testing_path(self):
+        return os.path.join(self.folder(), 'testing.npy')
 
 
 class Regression(Dataset):
 
     def __init__(self, amount=10000, inputs=10):
-        data = np.random.rand(amount, inputs)
+        self.amount = amount
+        self.inputs = inputs
+        super().__init__()
+
+    def parse(self):
+        data = np.random.rand(self.amount, self.inputs)
         products = np.prod(data, axis=1)
         products = products / np.max(products)
         sums = np.sum(data, axis=1)
         sums = sums / np.max(sums)
         targets = np.column_stack([sums, products])
         examples = [Example(x, y) for x, y in zip(data, targets)]
-        self.training, self.testing = self.split(examples)
+        return self.split(examples)
 
 
 class Classification(Dataset):
 
-    def __init__(self, amount=1000, inputs=20, classes=5):
-        data = np.random.randint(0, 1000, (amount, inputs))
-        mods = np.mod(np.sum(data, axis=1), classes)
+    def __init__(self, amount=10000, inputs=20, classes=5):
+        self.amount = amount
+        self.inputs = inputs
+        self.classes = classes
+        super().__init__()
+
+    def parse(self):
+        data = np.random.randint(0, 1000, (self.amount, self.inputs))
+        mods = np.mod(np.sum(data, axis=1), self.classes)
         data = data.astype(float) / data.max()
-        targets = np.zeros((amount, classes))
+        targets = np.zeros((self.amount, self.classes))
         for index, mod in enumerate(mods):
             targets[index][mod] = 1
         examples = [Example(x, y) for x, y in zip(data, targets)]
-        self.training, self.testing = self.split(examples)
+        return self.split(examples)
 
 
 class Mnist(Dataset):
 
-    def __init__(self, path='dataset/mnist'):
-        self.training = self.read(
-            os.path.join(path, 'train-images-idx3-ubyte.gz'),
-            os.path.join(path, 'train-labels-idx1-ubyte.gz'))
-        self.testing = self.read(
-            os.path.join(path, 't10k-images-idx3-ubyte.gz'),
-            os.path.join(path, 't10k-labels-idx1-ubyte.gz'))
+    urls = [
+        'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
+        'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
+        'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
+        'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
+    ]
 
-    @listify
-    def read(self, image_path, label_path):
-        images = gzip.open(image_path, 'rb')
+    def parse(self, train_x, train_y, test_x, test_y):
+        print(train_x, train_y, test_x, test_y)
+        training = list(self.read(train_x, train_y))
+        testing = list(self.read(test_x, test_y))
+        return training, testing
+
+    def read(self, data, labels):
+        images = gzip.open(data, 'rb')
         _, size, rows, cols = struct.unpack('>IIII', images.read(16))
         image_bin = array.array('B', images.read())
         images.close()
 
-        labels = gzip.open(label_path, 'rb')
+        labels = gzip.open(labels, 'rb')
         _, size2 = struct.unpack('>II', labels.read(8))
         assert size == size2
         label_bin = array.array('B', labels.read())
@@ -74,7 +148,8 @@ class Mnist(Dataset):
             target[label_bin[i]] = 1
             yield Example(data, target)
 
-    def show(self, example):
+    @staticmethod
+    def show(example):
         import pylab
         options = {'cmap': pylab.cm.gray, 'interpolation': 'nearest'}
         pylab.imshow(example.data.reshape(28, 28), **options)
