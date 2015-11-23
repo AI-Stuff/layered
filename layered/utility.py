@@ -52,6 +52,7 @@ def ensure_folder(path):
             return
         raise
 
+
 def hstack_lines(blocks, sep=' '):
     blocks = [x.split('\n') for x in blocks]
     height = max(len(block) for block in blocks)

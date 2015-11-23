@@ -20,7 +20,7 @@ class TestCommand(setuptools.Command):
 
     def _run(self, command):
         try:
-            subprocess.call(command)
+            subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
             print('Command failed with exit code', error.returncode)
             sys.exit(error.returncode)
