@@ -1,8 +1,7 @@
 import functools
 import multiprocessing
 import numpy as np
-from layered.network import Network, Matrices
-from layered.cost import Cost
+from layered.network import Matrices
 from layered.utility import batched
 
 

@@ -15,7 +15,7 @@ class TestCommand(setuptools.Command):
         pass
 
     def run(self):
-        self._run(['pep8', 'layered', 'test'])
+        self._run(['pep8', 'layered', 'test', 'setup.py'])
         self._run(['py.test', '--cov=layered', 'test'])
 
     def _run(self, command):
@@ -33,16 +33,20 @@ def parse_requirements(filename):
     return list(lines)
 
 
-setuptools.setup(
-    name='layered',
-    version='0.1.0',
-    description='Clean reference implementation of feed forward neural networks',
-    url='http://github.com/danijar/layered',
-    author='Danijar Hafner',
-    author_email='mail@danijar.com',
-    license='MIT',
-    packages=['layered'],
-    install_requires=parse_requirements('requirement/core.txt'),
-    tests_require=parse_requirements('requirement/test.txt'),
-    cmdclass={'test': TestCommand},
-)
+DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
+
+
+if __name__ == '__main__':
+    setuptools.setup(
+        name='layered',
+        version='0.1.0',
+        description=DESCRIPTION,
+        url='http://github.com/danijar/layered',
+        author='Danijar Hafner',
+        author_email='mail@danijar.com',
+        license='MIT',
+        packages=['layered'],
+        install_requires=parse_requirements('requirement/core.txt'),
+        tests_require=parse_requirements('requirement/test.txt'),
+        cmdclass={'test': TestCommand},
+    )
