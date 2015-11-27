@@ -6,8 +6,8 @@ class Example:
     __slots__ = ('_data', '_target')
 
     def __init__(self, data, target):
-        self._data = data
-        self._target = target
+        self._data = data.astype(float)
+        self._target = target.astype(float)
 
     @property
     def data(self):

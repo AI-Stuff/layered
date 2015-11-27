@@ -107,27 +107,25 @@ class Regression(Dataset):
 
 class Modulo(Dataset):
     """
-    Sythetically generated classification dataset. Targets are the modulo of
-    the randomly generated inputs. The input data is normalized between zero
-    and one while the target data is encoded as a vector of zeros with one
-    element set to one.
+    Sythetically generated classification dataset. The task is to predict the
+    modulo classes of random integers encoded as bit arrays of length 32.
     """
 
     cache = False
 
-    def __init__(self, amount=100000, inputs=16, classes=5):
+    def __init__(self, amount=100000, inputs=32, classes=7):
         self.amount = amount
         self.inputs = inputs
         self.classes = classes
         super().__init__()
 
     def parse(self):
-        data = np.random.randint(0, 1000, (self.amount, self.inputs))
-        mods = np.mod(np.sum(data, axis=1), self.classes)
-        data = data.astype(float) / data.max()
+        data = np.random.randint(0, self.inputs ** 2 - 1, self.amount)
+        mods = np.mod(data, self.classes)
         targets = np.zeros((self.amount, self.classes))
         for index, mod in enumerate(mods):
             targets[index][mod] = 1
+        data = (((data[:, None] & (1 << np.arange(self.inputs)))) > 0)
         examples = [Example(x, y) for x, y in zip(data, targets)]
         return self.split(examples)
 
