@@ -2,6 +2,7 @@ class Example:
     """
     Immutable class representing one example in a dataset.
     """
+
     __slots__ = ('_data', '_target')
 
     def __init__(self, data, target):

@@ -10,10 +10,11 @@ Layered Neural Network
 ======================
 
 This project is aims to be a clean reference implementation of feed forward
-neural networks in Python 3 under the MIT license. It's part of my efforts to
-understand the concepts of deep learning.
+neural networks. It's written in Python 3 published under the MIT license. I
+started this project as part of my efforts to understand the concepts of deep
+learning.
 
-You can use this repository when doing your own implementation of neural
+You can use this repository as guidance if you want to implement neural
 networks what I highly recommend if you are interested in understanding them.
 It's a good way to build intuition and allows you to verify your understanding.
 For example, I had a small misunderstanding of the backpropagation formula. My
@@ -32,17 +33,19 @@ pip install -r requirement/core.txt
 pip install -r requirement/user.txt
 ```
 
-Download the MNIST dataset into `dataset/mnist` and run this command. It will
-start training a network to classify handwritten digits and regularly print
-evaluation results on the test examples. After a few minutes, the error should
-drop below 3%.
+This will start training a network to classify handwritten digits and regularly
+print evaluation results on the test examples. After a few minutes, the error
+should drop below 3%.
 
 ```bash
-python main.py problem/mnist-batch.yaml
+python main.py problem/mnist-batch.yaml -v
 ```
 
-Learning problems are defined in YAML files. This is how the example file looks
-like.
+Problem Definition
+------------------
+
+Learning problems are defined in YAML files and it's easy to define your own.
+This is how the example problem above looks like.
 
 ```yaml
 dataset: Mnist
@@ -67,26 +70,30 @@ weight_decay: 0
 evaluate_every: 5000
 ```
 
-Quick Start
------------
+Manual Guide
+------------
+
+In this guide you will learn how to create and train models manually rather
+than using the problem definitions. You will gain more insight into training
+neural networks and how thie library works. It's easy so let's get started!
 
 ### Network Definition
 
-In this guide you will learn how to create and train models manually. A network
-is defined by it's layers. The parameters for a layer are the amount of neurons
-and the activation function. The first layer has a linear activation since the
-input data shouldn't be transformed directly.
+A network is defined by it's layers. The parameters for a layer are the amount
+of neurons and the activation function. The first layer has a linear activation
+since we don't want to apply any function to the input data. The sizes of the
+input and output layers must match the data and label sizes of the dataset.
 
 ```python
 from layered.network import Network
 from layered.activation import Linear, Relu, Sigmoid
 
 network = Network([
-    Layer(num_inputs, Linear),
+    Layer(784, Linear),
     Layer(700, Relu),
     Layer(500, Relu),
     Layer(300, Relu),
-    Layer(num_outputs, Sigmoid)
+    Layer(10, Sigmoid),
 ])
 ```
 ### Activation Functions
@@ -104,8 +111,8 @@ The weight matrices of the network are handed to algorithms like
 backpropagation, gradient decent and weight decay.
 
 If the initial weights of a neural network would be zero, no activation would
-be passed to the deeper layers. So we start with random values of a normal
-distribution.
+be passed to the deeper layers. So we start with random values sampled from a
+normal distribution.
 
 ```python
 from layered.network import Matrices
@@ -114,28 +121,20 @@ weights = Matrices(network.shapes)
 weights.flat = np.random.normal(0, weight_scale, len(weights.flat))
 ```
 
-### Optimization Methods
+### Optimization Algorithm
 
-Not let's learn good weights with backpropagation and gradient decent.  The
-classes for this can be imported from the `gradient` and `optimization`
-modules. We also need to decide for a cost function.
+Now let's learn good weights with standard backpropagation and gradient decent.
+The classes for this can be imported from the `gradient` and `optimization`
+modules. We also need a cost function.
 
 ```python
 from layered.cost import Squared
 from layered.gradient import Backprop
 from layered.optimization import GradientDecent
 
-backprop = ParallelBackprop(network, cost=Squared())
+backprop = Backprop(network, cost=Squared())
 decent = GradientDecent()
 ```
-
-### Gradient Algorithms
-
-- Backprop
-- BatchBackprop
-- ParallelBackprop
-- NumericalGradient
-- CheckedBackprop
 
 ### Cost Functions
 
@@ -146,12 +145,13 @@ decent = GradientDecent()
 
 ### Dataset and Training
 
-Download the four files of the MNIST dataset from Yan LeCun's website.
+Downloading and caching datasets is automated for you. So we just iterate over
+the training examples and train on them.
 
 ```python
 from layered.dataset import Mnist
 
-dataset = Mnist('dataset/mnist')
+dataset = Mnist()
 for example dataset.training:
     gradient = backprop(network, cost)
     weights = decent(weights, gradient, learning_rate=0.1)
@@ -159,15 +159,18 @@ for example dataset.training:
 
 ### Evaluation
 
-Then evaluate the learned weights on the testing examples.
+Finally, we want to see what you network has learned. We do this by letting the
+network predict classes for the testing examples. The highest probability is
+the model's best bet, thus the `np.argmax`.
 
 ```python
 import numpy as np
 from layered.utility import averaged
 
-error = averaged(examples, lambda x:
+error = averaged(
+    examples, lambda x:
     float(np.argmax(x.target) !=
-    np.argmax(network.feed(weights, x.data))))
+          np.argmax(network.feed(weights, x.data))))
 print('Testing error', round(100 * error), '%')
 ```
 
@@ -175,7 +178,7 @@ Contribution
 ------------
 
 You are welcome to add new learning methods and other improvements to the
-library. Please check if the linter and tests are passing first.
+library. Please check if the linters and tests are passing.
 
 ```bash
 pip install -r requirement/test.txt

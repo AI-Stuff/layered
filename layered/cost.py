@@ -11,6 +11,9 @@ class Cost:
 
 
 class Squared(Cost):
+    """
+    Fast and simple cost function.
+    """
 
     def __call__(self, prediction, target):
         return (prediction - target) ** 2 / 2
@@ -20,6 +23,12 @@ class Squared(Cost):
 
 
 class CrossEntropy(Cost):
+    """
+    Logistic cost function used for classification tasks. Learns faster in the
+    beginning than SquaredError because large errors are penalized
+    exponentially. This makes sense in classification since only the best class
+    will be the predicted one.
+    """
 
     def __init__(self, epsilon=1e-11):
         self.epsilon = epsilon

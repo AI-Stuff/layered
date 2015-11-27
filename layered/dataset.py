@@ -12,15 +12,18 @@ from layered.utility import ensure_folder
 class Dataset:
 
     urls = []
+    cache = True
 
     def __init__(self):
-        if self._is_cached():
+        cache = type(self).cache
+        if cache and self._is_cached():
             print('Load cached dataset')
             self.load()
         else:
             filenames = [self.download(x) for x in type(self).urls]
             self.training, self.testing = self.parse(*filenames)
-            self.dump()
+            if cache:
+                self.dump()
 
     @classmethod
     def folder(cls):
@@ -78,6 +81,13 @@ class Dataset:
 
 
 class Regression(Dataset):
+    """
+    Synthetically generated dataset for regression. The task is to predict the
+    sum and product of all the input values. All values are normalized between
+    zero and one.
+    """
+
+    cache = False
 
     def __init__(self, amount=10000, inputs=10):
         self.amount = amount
@@ -95,9 +105,17 @@ class Regression(Dataset):
         return self.split(examples)
 
 
-class Classification(Dataset):
+class Modulo(Dataset):
+    """
+    Sythetically generated classification dataset. Targets are the modulo of
+    the randomly generated inputs. The input data is normalized between zero
+    and one while the target data is encoded as a vector of zeros with one
+    element set to one.
+    """
 
-    def __init__(self, amount=10000, inputs=20, classes=5):
+    cache = False
+
+    def __init__(self, amount=100000, inputs=16, classes=5):
         self.amount = amount
         self.inputs = inputs
         self.classes = classes
@@ -115,6 +133,15 @@ class Classification(Dataset):
 
 
 class Mnist(Dataset):
+    """
+    The MNIST database of handwritten digits, available from this page, has a
+    training set of 60,000 examples, and a test set of 10,000 examples. It is a
+    subset of a larger set available from NIST. The digits have been
+    size-normalized and centered in a fixed-size image. It is a good database
+    for people who want to try learning techniques and pattern recognition
+    methods on real-world data while spending minimal efforts on preprocessing
+    and formatting. (from http://yann.lecun.com/exdb/mnist/)
+    """
 
     urls = [
         'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
@@ -147,11 +174,3 @@ class Mnist(Dataset):
             target = np.zeros(10)
             target[label_bin[i]] = 1
             yield Example(data, target)
-
-    @staticmethod
-    def show(example):
-        import pylab
-        options = {'cmap': pylab.cm.gray, 'interpolation': 'nearest'}
-        pylab.imshow(example.data.reshape(28, 28), **options)
-        print('Target:', example.target)
-        pylab.show()

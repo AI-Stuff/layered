@@ -1,8 +1,6 @@
 import os
 import errno
 import functools
-import numpy as np
-from layered.network import Example
 
 
 def repeated(iterable, times):

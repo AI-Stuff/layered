@@ -12,10 +12,14 @@ class Gradient:
         self.cost = cost
 
     def __call__(self, weights, example):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class Backprop(Gradient):
+    """
+    Use the backpropagation algorithm to efficiently determine the gradient of
+    the cost function with respect to each individual weight.
+    """
 
     def __call__(self, weights, example):
         prediction = self.network.feed(weights, example.data)
@@ -70,6 +74,10 @@ class Backprop(Gradient):
 
 
 class NumericalGradient(Gradient):
+    """
+    Approximate the gradient for each weight individually by sampling the error
+    function slightly above and below the current value of the weight.
+    """
 
     def __init__(self, network, cost, distance=1e-5):
         super().__init__(network, cost)
@@ -107,6 +115,12 @@ class NumericalGradient(Gradient):
 
 
 class CheckedBackprop(Gradient):
+    """
+    Computes the gradient both analytically trough backpropagation and
+    numerically to validate the backpropagation implementation and derivatives
+    of activation functions and cost functions. This is slow by its nature and
+    it's recommended to validate derivatives on small networks.
+    """
 
     def __init__(self, network, cost, distance=1e-5, tolerance=1e-8):
         self.tolerance = tolerance
@@ -127,6 +141,9 @@ class CheckedBackprop(Gradient):
 
 
 class BatchBackprop:
+    """
+    Calculate the average gradient over a batch of examples.
+    """
 
     def __init__(self, network, cost):
         self.backprop = Backprop(network, cost)
@@ -139,6 +156,10 @@ class BatchBackprop:
 
 
 class ParallelBackprop:
+    """
+    Alternative to BatchBackprop that yields the same results but utilizes
+    multiprocessing to make use of more than one processor core.
+    """
 
     def __init__(self, network, cost, workers=4):
         self.backprop = BatchBackprop(network, cost)

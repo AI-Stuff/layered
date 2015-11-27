@@ -1,0 +1,15 @@
+dataset: Modulo
+cost: CrossEntropy
+layers:
+  - activation: Linear
+    size: 16
+  - activation: Relu
+    size: 64
+  - activation: Relu
+    size: 64
+  - activation: Softmax
+    size: 5
+training_rounds: 1
+learning_rate: 0.01
+weight_scale: 0.1
+evaluate_every: 500
