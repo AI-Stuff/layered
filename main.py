@@ -29,6 +29,12 @@ if __name__ == '__main__':
         'problem', nargs='?',
         help='path to the YAML problem definition')
     parser.add_argument(
+        '-s', '--save', default=None,
+        help='path to dump the learned weights at each evaluation')
+    parser.add_argument(
+        '-l', '--load', default=None,
+        help='path to load the weights from at startup')
+    parser.add_argument(
         '-v', '--visual', action='store_true',
         help='show a diagram of training costs')
     args = parser.parse_args()
@@ -38,7 +44,13 @@ if __name__ == '__main__':
     # Define model and initialize weights
     network = Network(problem.layers)
     weights = Matrices(network.shapes)
-    weights.flat = np.random.normal(0, problem.weight_scale, len(weights.flat))
+    if args.load:
+        loaded = np.load(args.load)
+        assert loaded.shape == weights.shape, 'weights must match problem'
+        weights.flat = loaded
+    else:
+        weights.flat = np.random.normal(
+            0, problem.weight_scale, len(weights.flat))
 
     # Classes needed during training
     backprop = BatchBackprop(network, problem.cost)
@@ -66,8 +78,11 @@ if __name__ == '__main__':
             costs = compute_costs(network, weights, problem.cost, batch)
             plot_training(costs)
         if every(problem.evaluate_every, problem.batch_size, index):
+            if args.save:
+                np.save(args.save, weights)
             error = compute_error(
                     network, weights, problem.cost, problem.dataset.testing)
-            plot_testing([error])
             print('Batch {} test error {:.2f}%'.format(index, 100 * error))
+            if args.visual:
+                plot_testing([error])
     print('Done')
