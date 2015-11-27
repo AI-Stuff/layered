@@ -165,13 +165,13 @@ the model's best bet, thus the `np.argmax`.
 
 ```python
 import numpy as np
-from layered.utility import averaged
 
-error = averaged(
-    examples, lambda x:
-    float(np.argmax(x.target) !=
-          np.argmax(network.feed(weights, x.data))))
-print('Testing error', round(100 * error), '%')
+error = 0
+for example in dataset.testing:
+    prediction = network.feed(weights, example.data)
+    if np.argmax(prediction) != np.argmax(example.target):
+        error += 1 / len(dataset.testing)
+print('Testing error', round(100 * error, 2), '%')
 ```
 
 Contribution

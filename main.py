@@ -6,14 +6,20 @@ from layered.gradient import BatchBackprop
 from layered.network import Network, Matrices
 from layered.optimization import GradientDecent, Momentum, WeightDecay
 from layered.utility import repeated, batched
-from layered.evaluation import Evaluator
-from layered.plot import Plot
+from layered.evaluation import compute_costs, compute_error
 
 
-def compute_costs(network, weights, cost, examples):
-    prediction = [network.feed(weights, x.data) for x in examples]
-    costs = [cost(x, y.target).mean() for x, y in zip(prediction, examples)]
-    return list(costs)
+def every(times, step_size, index):
+    """
+    Given a loop over batches of an iterable and an operation that should be
+    performed every few elements. Determine whether the operation should be
+    called for the current index.
+    """
+    current = index * step_size
+    step = current // times * times
+    reached = current >= step
+    overshot = current >= step + step_size
+    return current and reached and not overshot
 
 
 if __name__ == '__main__':
@@ -40,9 +46,8 @@ if __name__ == '__main__':
     decent = GradientDecent()
     decay = WeightDecay()
     if args.visual:
-        plot = Plot()
-    evaluator = Evaluator(
-        network, problem.dataset.testing, problem.evaluate_every)
+        from layered.plot import RunningPlot
+        plot_training = RunningPlot()
 
     # Train the model
     repeats = repeated(problem.dataset.training, problem.epochs)
@@ -54,6 +59,10 @@ if __name__ == '__main__':
         weights = decay(weights, problem.weight_decay)
         # Show progress
         if args.visual:
-            plot(compute_costs(network, weights, problem.cost, batch))
-        evaluator(index * problem.batch_size, weights)
+            costs = compute_costs(network, weights, problem.cost, batch)
+            plot_training(costs)
+        if every(problem.evaluate_every, problem.batch_size, index):
+            error = compute_error(
+                    network, weights, problem.cost, problem.dataset.testing)
+            print('Batch {} test error {:.2f}%'.format(index, 100 * error))
     print('Done')
