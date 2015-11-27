@@ -45,7 +45,7 @@ if __name__ == '__main__':
         network, problem.dataset.testing, problem.evaluate_every)
 
     # Train the model
-    repeats = repeated(problem.dataset.training, problem.training_rounds)
+    repeats = repeated(problem.dataset.training, problem.epochs)
     batches = batched(repeats, problem.batch_size)
     for index, batch in enumerate(batches):
         gradient = backprop(weights, batch)

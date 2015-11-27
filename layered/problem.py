@@ -65,7 +65,7 @@ class Problem:
             'cost': 'Squared',
             'dataset': 'Regression',
             'layers': [],
-            'training_rounds': 1,
+            'epochs': 1,
             'batch_size': 1,
             'learning_rate': 0.1,
             'momentum': 0.0,

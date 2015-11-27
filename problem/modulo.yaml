@@ -9,7 +9,7 @@ layers:
     size: 64
   - activation: Softmax
     size: 7
-training_rounds: 1
+epochs: 1
 learning_rate: 0.008
 weight_scale: 0.1
 evaluate_every: 5000

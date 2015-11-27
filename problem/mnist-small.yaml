@@ -10,7 +10,7 @@ layers:
     size: 10
 training_rounds: 5
 batch_size: 32
-learning_rate: 0.001
+epochs: 0.001
 momentum: 0.9
 weight_scale: 0.1
 weight_decay: 0

@@ -12,7 +12,7 @@ layers:
     size: 400
   - activation: Softmax
     size: 10
-training_rounds: 5
+epochs: 5
 batch_size: 32
 learning_rate: 0.01
 momentum: 0.9
