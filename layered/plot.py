@@ -2,7 +2,6 @@ import collections
 import warnings
 import threading
 import time
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cbook
 
@@ -10,48 +9,29 @@ import matplotlib.cbook
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
 
 
-class Plot:
+class Window:
 
-    def __init__(self, figure=None, refresh=0.5):
-        self.figure = figure
+    def __init__(self, refresh=0.5):
         self.refresh = refresh
-        self.max = 0
-        self._init_data()
         self._init_worker()
 
-    def __call__(self, values):
-        with self.lock:
-            if max(values) > self.max:
-                self.max = max(values)
-                self.ax.set_ylim(0, self.max)
-            self.data += values
-            self.li.set_ydata(self.data)
-
-    def _axis(self):
-        return 'X', 'Y'
-
-    def _init_line(self):
-        return self.ax.plot(self.data)[0]
-
-    def _init_data(self):
-        self.data = []
-
-    def _init_plot(self):
-        self.figure = self.figure or plt.figure()
-        self.ax = self.figure.add_subplot(
-            111, xlabel=self._axis()[0], ylabel=self._axis()[1])
-        self.li = self._init_line()
-        self.figure.canvas.draw()
-        plt.show(block=False)
+    def plot(self, *args, **kwargs):
+        return Plot(self.figure, self.lock, *args, **kwargs)
 
     def _init_worker(self):
         self.lock = threading.Lock()
         self.lock.acquire()
         self.thread = threading.Thread(target=self._work)
         self.thread.start()
+        with self.lock:
+            return
+
+    def _init_figure(self):
+        self.figure = plt.figure()
+        plt.show(block=False)
 
     def _work(self):
-        self._init_plot()
+        self._init_figure()
         self.lock.release()
         while True:
             before = time.time()
@@ -61,28 +41,49 @@ class Plot:
             plt.pause(max(0.001, self.refresh - duration))
 
 
-class RunningPlot(Plot):
+class Plot:
 
-    def __init__(self, figure=None, refresh=0.5, width=1000):
-        self.width = width
-        super().__init__(figure, refresh)
-
-    def _axis(self):
-        return 'Training example', 'Cost'
-
-    def _init_line(self):
-        style = {
+    STYLES = {
+        'dot': {
             'linestyle': '',
             'color': 'blue',
             'marker': '.',
-            'markersize': 5
-        }
-        return self.ax.plot(np.arange(self.width), self.data, **style)[0]
+            'markersize': 5,
+        },
+        'line': {},
+    }
 
-    def _init_data(self):
-        self.data = collections.deque([None] * self.width, maxlen=self.width)
+    def __init__(self, figure, lock, tile=111, style='line',
+                 title='', xlabel='', ylabel='', fixed=None):
+        assert style in type(self).STYLES
+        self.figure = figure
+        self.lock = lock
+        self.height = 0
+        self.fixed = fixed
+        if fixed:
+            self.xdata = list(range(fixed))
+            self.ydata = collections.deque([None] * fixed, maxlen=fixed)
+            self.width = fixed
+        else:
+            self.xdata = []
+            self.ydata = []
+            self.width = 0
+        styles = type(self).STYLES[style]
+        with self.lock:
+            self.ax = self.figure.add_subplot(
+                tile, title=title, xlabel=xlabel, ylabel=ylabel)
+            self.ax.get_xaxis().set_ticks([])
+            self.line, = self.ax.plot(self.xdata, self.ydata, **styles)
 
-    def _init_plot(self):
-        super()._init_plot()
-        self.ax.set_xlim(0, self.width)
-        self.ax.get_xaxis().set_ticks([])
+    def __call__(self, values):
+        self.ydata += values
+        self.height = max(self.height, *values)
+        if not self.fixed:
+            self.xdata += [x + len(self.xdata) for x in range(len(values))]
+            self.width += len(values)
+        assert len(self.xdata) == len(self.ydata) == self.width
+        with self.lock:
+            self.line.set_xdata(self.xdata)
+            self.line.set_ydata(self.ydata)
+            self.ax.set_xlim(0, self.width - 1, emit=False)
+            self.ax.set_ylim(0, 1.05 * self.height, emit=False)

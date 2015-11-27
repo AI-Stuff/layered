@@ -46,8 +46,12 @@ if __name__ == '__main__':
     decent = GradientDecent()
     decay = WeightDecay()
     if args.visual:
-        from layered.plot import RunningPlot
-        plot_training = RunningPlot()
+        from layered.plot import Window
+        window = Window()
+        plot_training = window.plot(
+            211, 'dot', 'Training', 'Examples', 'Cost', fixed=1000)
+        plot_testing = window.plot(
+            212, 'line', 'Testing', 'Time', 'Error')
 
     # Train the model
     repeats = repeated(problem.dataset.training, problem.epochs)
@@ -64,5 +68,6 @@ if __name__ == '__main__':
         if every(problem.evaluate_every, problem.batch_size, index):
             error = compute_error(
                     network, weights, problem.cost, problem.dataset.testing)
+            plot_testing([error])
             print('Batch {} test error {:.2f}%'.format(index, 100 * error))
     print('Done')
