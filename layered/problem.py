@@ -18,6 +18,7 @@ class Problem:
                 self.parse(file_)
         elif content:
             self.parse(content)
+        self._validate()
 
     def __str__(self):
         keys = self.__dict__.keys() & self._defaults().keys()
@@ -59,6 +60,15 @@ class Problem:
         if not hasattr(module, name) and fallback:
             return self._find_symbol(module, fallback, None)
         return getattr(module, name)
+
+    def _validate(self):
+        num_input = len(self.dataset.training[0].data)
+        num_output = len(self.dataset.training[0].target)
+        if self.layers:
+            assert self.layers[0].size == num_input, (
+                'the size of the input layer must match the training data')
+            assert self.layers[-1].size == num_output, (
+                'the size of the output layer must match the training labels')
 
     def _defaults(self):
         return {

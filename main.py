@@ -1,25 +1,7 @@
 import os
 import argparse
-import numpy as np
 from layered.problem import Problem
-from layered.gradient import BatchBackprop
-from layered.network import Network, Matrices
-from layered.optimization import GradientDecent, Momentum, WeightDecay
-from layered.utility import repeated, batched
-from layered.evaluation import compute_costs, compute_error
-
-
-def every(times, step_size, index):
-    """
-    Given a loop over batches of an iterable and an operation that should be
-    performed every few elements. Determine whether the operation should be
-    called for the current index.
-    """
-    current = index * step_size
-    step = current // times * times
-    reached = current >= step
-    overshot = current >= step + step_size
-    return current and reached and not overshot
+from layered.trainer import Trainer
 
 
 if __name__ == '__main__':
@@ -40,49 +22,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print('Problem', os.path.split(args.problem)[1])
     problem = Problem(args.problem)
-
-    # Define model and initialize weights
-    network = Network(problem.layers)
-    weights = Matrices(network.shapes)
-    if args.load:
-        loaded = np.load(args.load)
-        assert loaded.shape == weights.shape, 'weights must match problem'
-        weights.flat = loaded
-    else:
-        weights.flat = np.random.normal(
-            0, problem.weight_scale, len(weights.flat))
-
-    # Classes needed during training
-    backprop = BatchBackprop(network, problem.cost)
-    momentum = Momentum()
-    decent = GradientDecent()
-    decay = WeightDecay()
-    if args.visual:
-        from layered.plot import Window
-        window = Window()
-        plot_training = window.plot(
-            211, 'dot', 'Training', 'Examples', 'Cost', fixed=1000)
-        plot_testing = window.plot(
-            212, 'line', 'Testing', 'Time', 'Error')
-
-    # Train the model
-    repeats = repeated(problem.dataset.training, problem.epochs)
-    batches = batched(repeats, problem.batch_size)
-    for index, batch in enumerate(batches):
-        gradient = backprop(weights, batch)
-        gradient = momentum(gradient, problem.momentum)
-        weights = decent(weights, gradient, problem.learning_rate)
-        weights = decay(weights, problem.weight_decay)
-        # Show progress
-        if args.visual:
-            costs = compute_costs(network, weights, problem.cost, batch)
-            plot_training(costs)
-        if every(problem.evaluate_every, problem.batch_size, index):
-            if args.save:
-                np.save(args.save, weights)
-            error = compute_error(
-                    network, weights, problem.cost, problem.dataset.testing)
-            print('Batch {} test error {:.2f}%'.format(index, 100 * error))
-            if args.visual:
-                plot_testing([error])
+    trainer = Trainer(problem, args.load, args.save, args.visual)
+    trainer()
     print('Done')

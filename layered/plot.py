@@ -85,5 +85,5 @@ class Plot:
         with self.lock:
             self.line.set_xdata(self.xdata)
             self.line.set_ydata(self.ydata)
-            self.ax.set_xlim(0, self.width - 1, emit=False)
+            self.ax.set_xlim(0, max(1, self.width - 1), emit=False)
             self.ax.set_ylim(0, 1.05 * self.height, emit=False)
