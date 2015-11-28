@@ -28,7 +28,8 @@ class Dataset:
     @classmethod
     def folder(cls):
         name = cls.__name__.lower()
-        folder = os.path.join('~/.layered/dataset', name)
+        home = os.path.expanduser('~')
+        folder = os.path.join(home, '.layered/dataset', name)
         ensure_folder(folder)
         return folder
 
