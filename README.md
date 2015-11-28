@@ -24,8 +24,8 @@ Instructions
 ------------
 
 Optionally, create a virtual environment. Then install the dependencies. If you
-encounter errors, try installing `python3-matplotlib` or equivalent via your
-platform's package manager.
+encounter errors, try running `sudo apt-get build-dep python3-matplotlib` or
+equivalent via your platform's package manager.
 
 ```bash
 virtualenv . -p python3 && source bin/activate
