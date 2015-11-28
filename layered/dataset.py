@@ -28,7 +28,7 @@ class Dataset:
     @classmethod
     def folder(cls):
         name = cls.__name__.lower()
-        folder = os.path.join('dataset', name)
+        folder = os.path.join('~/.layered/dataset', name)
         ensure_folder(folder)
         return folder
 
@@ -149,7 +149,6 @@ class Mnist(Dataset):
     ]
 
     def parse(self, train_x, train_y, test_x, test_y):
-        print(train_x, train_y, test_x, test_y)
         training = list(self.read(train_x, train_y))
         testing = list(self.read(test_x, test_y))
         return training, testing

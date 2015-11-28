@@ -23,23 +23,39 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-Optionally, create a virtual environment. Then install the dependencies. If you
-encounter errors, try running `sudo apt-get build-dep python3-matplotlib` or
-equivalent via your platform's package manager.
-
-```bash
-virtualenv . -p python3 && source bin/activate
-pip install -r requirement/core.txt
-pip install -r requirement/user.txt
-```
-
 This will start training a network to classify handwritten digits and regularly
 print evaluation results on the test examples. After a few minutes, the error
 should drop below 3%.
 
 ```bash
-python main.py problem/mnist-batch.yaml -v
+pip install layered
+layered problem.yaml -v
 ```
+
+Contribution
+------------
+
+Optionally, create a virtual environment. Then install the dependencies. If you
+encounter errors, try running `sudo apt-get build-dep python3-matplotlib` or
+equivalent via your platform's package manager.
+
+```bash
+git clone git@github.com:danijar/layered.git && cd layered
+virtualenv . -p python3 && source bin/activate
+pip install -r requirement/core.txt
+pip install -r requirement/user.txt
+```
+
+See if everything's working with `python -m layered problem/mnist-batch.yaml
+-v` and start playing around with the code. For pull requests, please check
+that the linters and tests are passing.
+
+```bash
+pip install -r requirement/test.txt
+python setup.py test
+```
+
+If you have questions, feel free to contact me.
 
 Problem Definition
 ------------------
@@ -173,16 +189,3 @@ for example in dataset.testing:
         error += 1 / len(dataset.testing)
 print('Testing error', round(100 * error, 2), '%')
 ```
-
-Contribution
-------------
-
-You are welcome to add new learning methods and other improvements to the
-library. Please check if the linters and tests are passing.
-
-```bash
-pip install -r requirement/test.txt
-python setup.py test
-```
-
-If you have questions, feel free to contact me.

@@ -4,11 +4,11 @@ from layered.problem import Problem
 from layered.trainer import Trainer
 
 
-if __name__ == '__main__':
+def main():
     # The problem defines dataset, network and learning parameters
     parser = argparse.ArgumentParser('layered')
     parser.add_argument(
-        'problem', nargs='?',
+        'problem',
         help='path to the YAML problem definition')
     parser.add_argument(
         '-s', '--save', default=None,
@@ -25,3 +25,7 @@ if __name__ == '__main__':
     trainer = Trainer(problem, args.load, args.save, args.visual)
     trainer()
     print('Done')
+
+
+if __name__ == '__main__':
+    main()

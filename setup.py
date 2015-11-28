@@ -1,6 +1,8 @@
+import os
 import sys
 import subprocess
 import setuptools
+from setuptools.command.build_ext import build_ext as _build_ext
 
 
 class TestCommand(setuptools.Command):
@@ -26,7 +28,18 @@ class TestCommand(setuptools.Command):
             sys.exit(error.returncode)
 
 
-def parse_requirements(filename):
+class BuildExtCommand(_build_ext):
+
+    def finalize_options(self):
+        # Fix Numpy build error when bundled as a dependency.
+        # From http://stackoverflow.com/a/21621689/1079110
+        _build_ext.finalize_options(self)
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
+
+
+def requirements(filename):
     with open(filename) as file_:
         lines = map(lambda x: x.strip('\n'), file_.readlines())
     lines = filter(lambda x: x and not x.startswith('#'), lines)
@@ -46,7 +59,9 @@ if __name__ == '__main__':
         author_email='mail@danijar.com',
         license='MIT',
         packages=['layered'],
-        install_requires=parse_requirements('requirement/core.txt'),
-        tests_require=parse_requirements('requirement/test.txt'),
-        cmdclass={'test': TestCommand},
+        setup_requies=requirements('requirement/core.txt'),
+        install_requires=requirements('requirement/user.txt'),
+        tests_require=requirements('requirement/test.txt'),
+        cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
+        entry_points={'console_scripts': ['layered=layered.__main__:main']},
     )
