@@ -1,2 +1,2 @@
-PyYAML==3.11
+PyYAML>=3.10
 numpy>=1.9.1

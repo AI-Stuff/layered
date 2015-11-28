@@ -59,7 +59,7 @@ if __name__ == '__main__':
         author_email='mail@danijar.com',
         license='MIT',
         packages=['layered'],
-        setup_requies=requirements('requirement/core.txt'),
+        setup_requires=requirements('requirement/core.txt'),
         install_requires=requirements('requirement/user.txt'),
         tests_require=requirements('requirement/test.txt'),
         cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
