@@ -23,45 +23,22 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-This will start training a network to classify handwritten digits and regularly
-print evaluation results on the test examples. After a few minutes, the error
-should drop below 3%.
+This will train a network to classify handwritten digits visualize progress.
+After some minutes, the error should drop below 3%. If you encounter errors,
+try running `sudo apt-get build-dep python3-matplotlib` or equivalent via your
+platform's package manager.
 
 ```bash
-pip install layered
-layered problem.yaml -v
+sudo pip install layered
+wget http://git.io/vBPOH
+layered mnist-batch.yaml -v
 ```
 
-Contribution
-------------
-
-Optionally, create a virtual environment. Then install the dependencies. If you
-encounter errors, try running `sudo apt-get build-dep python3-matplotlib` or
-equivalent via your platform's package manager.
-
-```bash
-git clone git@github.com:danijar/layered.git && cd layered
-virtualenv . -p python3 && source bin/activate
-pip install -r requirement/core.txt
-pip install -r requirement/user.txt
-```
-
-See if everything's working with `python -m layered problem/mnist-batch.yaml
--v` and start playing around with the code. For pull requests, please check
-that the linters and tests are passing.
-
-```bash
-pip install -r requirement/test.txt
-python setup.py test
-```
-
-If you have questions, feel free to contact me.
-
-Problem Definition
-------------------
+### Problem Definition
 
 Learning problems are defined in YAML files and it's easy to define your own.
-This is how the example problem above looks like.
+This is how the example problem above looks like. Scroll down for tables of
+available cost and activation functions.
 
 ```yaml
 dataset: Mnist
@@ -81,44 +58,82 @@ epochs: 5
 batch_size: 32
 learning_rate: 0.01
 momentum: 0.9
-weight_scale: 0.1
+weight_scale: 0.01
 weight_decay: 0
 evaluate_every: 5000
 ```
+
+### Command Line Arguments
+
+In addition to the YAML problem definition, these optional arguments are
+available.
+
+| Argument | Description |
+| :------- | :---------- |
+| -h, --help | Print usage instructions |
+| -s, --save | Path to dump the learned weights at each evaluation |
+| -l, --load | Path to load learned weights from at startup |
+| -v, --visual | Show a diagram of trainig costs and testing error |
+
+Learned weights are stored as Numpy binary arrays with the NPY extension.
+
+### Contribution
+
+Optionally, create a virtual environment. Then install the dependencies.
+```bash
+git clone git@github.com:danijar/layered.git && cd layered
+virtualenv . -p python3 && source bin/activate
+pip install -r requirement/core.txt
+pip install -r requirement/user.txt
+```
+
+See if everything's working with `python -m layered problem/mnist-batch.yaml
+-v` and start playing around with the code. For pull requests, please check
+that the linters and tests are passing.
+
+```bash
+pip install -r requirement/test.txt
+python setup.py test
+```
+
+If you have questions, feel free to contact me.
 
 Manual Guide
 ------------
 
 In this guide you will learn how to create and train models manually rather
-than using the problem definitions. You will gain more insight into training
-neural networks and how thie library works. It's easy so let's get started!
+than using the problem definitions to gain more insight into training neural
+networks. Let's start!
 
 ### Network Definition
 
-A network is defined by it's layers. The parameters for a layer are the amount
+A network is defined by its layers. The parameters for a layer are the amount
 of neurons and the activation function. The first layer has a linear activation
-since we don't want to apply any function to the input data. The sizes of the
-input and output layers must match the data and label sizes of the dataset.
+since we don't want to apply any function to the input data.
 
 ```python
 from layered.network import Network
-from layered.activation import Linear, Relu, Sigmoid
+from layered.activation import Linear, Relu, Softmax
+
+num_inputs = 784
+num_outputs = 10
 
 network = Network([
-    Layer(784, Linear),
+    Layer(num_inputs, Linear),
     Layer(700, Relu),
     Layer(500, Relu),
     Layer(300, Relu),
-    Layer(10, Sigmoid),
+    Layer(num_outputs, Softmax),
 ])
 ```
+
 ### Activation Functions
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
 | Linear | x | ![Linear](image/linear.png) |
-| Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
 | Relu | max(0, x) | ![Relu](image/relu.png) |
+| Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
 | Softmax | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
 
 ### Weight Initialization
@@ -161,8 +176,8 @@ decent = GradientDecent()
 
 ### Dataset and Training
 
-Downloading and caching datasets is automated for you. So we just iterate over
-the training examples and train on them.
+Datasets are automatically downloaded and cached. We just iterate over the
+training examples and train the weights on them.
 
 ```python
 from layered.dataset import Mnist
@@ -175,9 +190,9 @@ for example dataset.training:
 
 ### Evaluation
 
-Finally, we want to see what you network has learned. We do this by letting the
-network predict classes for the testing examples. The highest probability is
-the model's best bet, thus the `np.argmax`.
+Finally, we want to see what our network has learned. We do this by letting the
+network predict classes for the testing examples. The strongest class is the
+model's best bet, thus the `np.argmax`.
 
 ```python
 import numpy as np
@@ -189,3 +204,6 @@ for example in dataset.testing:
         error += 1 / len(dataset.testing)
 print('Testing error', round(100 * error, 2), '%')
 ```
+
+Please don't hestitate to send feedback and ideas to me at mail@danijar.com and
+open issues if something's not working.
