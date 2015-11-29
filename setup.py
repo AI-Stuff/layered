@@ -53,7 +53,7 @@ DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
 if __name__ == '__main__':
     setuptools.setup(
         name='layered',
-        version='0.1.0',
+        version='0.1.1',
         description=DESCRIPTION,
         url='http://github.com/danijar/layered',
         author='Danijar Hafner',
