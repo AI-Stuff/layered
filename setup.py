@@ -10,6 +10,11 @@ class TestCommand(test):
     description = 'run tests, linters and create a coverage report'
     user_options = []
 
+    def finalize_options(self):
+        super().finalize_options()
+        self.test_args = []
+        self.test_suite = True
+
     def run(self):
         super().run()
         self._call(['pep8', 'layered', 'test', 'setup.py'])
@@ -49,20 +54,37 @@ def parse_requirements(filename):
 
 DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
 
+SETUP_REQUIRES = [
+    'PyYAML>=3.10',
+    'numpy>=1.9.1',
+]
+
+INSTALL_REQUIRES = [
+    'matplotlib==1.5.0',
+]
+
+TESTS_REQUIRE = [
+    'setuptools',
+    'coveralls',
+    'pep8==1.6.2',
+    'pytest==2.8.2',
+    'pytest-cov==2.2.0',
+]
+
 
 if __name__ == '__main__':
     setuptools.setup(
         name='layered',
-        version='0.1.1',
+        version='0.1.2',
         description=DESCRIPTION,
         url='http://github.com/danijar/layered',
         author='Danijar Hafner',
         author_email='mail@danijar.com',
         license='MIT',
         packages=['layered'],
-        setup_requires=parse_requirements('requirement/core.txt'),
-        install_requires=parse_requirements('requirement/user.txt'),
-        tests_require=parse_requirements('requirement/test.txt'),
-        entry_points={'console_scripts': ['layered=layered.__main__:main']},
+        setup_requires=SETUP_REQUIRES,
+        install_requires=INSTALL_REQUIRES,
+        tests_require=SETUP_REQUIRES,
         cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
+        entry_points={'console_scripts': ['layered=layered.__main__:main']},
     )
