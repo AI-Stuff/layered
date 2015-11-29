@@ -68,7 +68,7 @@ INSTALL_REQUIRES = [
 
 TESTS_REQUIRE = [
     'pep8>=1.6.2',
-    'pytest>=2.8.2',
+    'pytest>=2.6.4',
     'pytest-cov>=2.2.0',
     'coveralls',
 ]
