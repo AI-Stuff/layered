@@ -57,11 +57,12 @@ def parse_requirements(filename):
 DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
 
 SETUP_REQUIRES = [
-    'PyYAML>=3.10',
     'numpy>=1.9.1',
 ]
 
 INSTALL_REQUIRES = [
+    'PyYAML>=3.10',
+    'numpy>=1.9.1',
     'matplotlib>=1.5.0',
 ]
 
@@ -76,7 +77,7 @@ TESTS_REQUIRE = [
 if __name__ == '__main__':
     setuptools.setup(
         name='layered',
-        version='0.1.2',
+        version='0.1.3',
         description=DESCRIPTION,
         url='http://github.com/danijar/layered',
         author='Danijar Hafner',
