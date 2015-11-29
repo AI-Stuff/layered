@@ -1,26 +1,25 @@
-import os
 import sys
 import subprocess
 import setuptools
-from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.command.build_ext import build_ext
+from setuptools.command.test import test
 
 
-class TestCommand(setuptools.Command):
+class TestCommand(test):
 
-    description = 'run linters, tests and create a coverage report'
+    description = 'run tests, linters and create a coverage report'
     user_options = []
 
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
     def run(self):
-        self._run(['pep8', 'layered', 'test', 'setup.py'])
-        self._run(['py.test', '--cov=layered', 'test'])
+        super().run()
+        self._call(['pep8', 'layered', 'test', 'setup.py'])
 
-    def _run(self, command):
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(['--cov=layered', 'test'])
+        sys.exit(errno)
+
+    def _call(self, command):
         try:
             subprocess.check_call(command)
         except subprocess.CalledProcessError as error:
@@ -28,18 +27,20 @@ class TestCommand(setuptools.Command):
             sys.exit(error.returncode)
 
 
-class BuildExtCommand(_build_ext):
+class BuildExtCommand(build_ext):
+    """
+    Fix Numpy build error when bundled as a dependency.
+    From http://stackoverflow.com/a/21621689/1079110
+    """
 
     def finalize_options(self):
-        # Fix Numpy build error when bundled as a dependency.
-        # From http://stackoverflow.com/a/21621689/1079110
-        _build_ext.finalize_options(self)
+        super().finalize_options()
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
         self.include_dirs.append(numpy.get_include())
 
 
-def requirements(filename):
+def parse_requirements(filename):
     with open(filename) as file_:
         lines = map(lambda x: x.strip('\n'), file_.readlines())
     lines = filter(lambda x: x and not x.startswith('#'), lines)
@@ -59,9 +60,9 @@ if __name__ == '__main__':
         author_email='mail@danijar.com',
         license='MIT',
         packages=['layered'],
-        setup_requires=requirements('requirement/core.txt'),
-        install_requires=requirements('requirement/user.txt'),
-        tests_require=requirements('requirement/test.txt'),
-        cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
+        setup_requires=parse_requirements('requirement/core.txt'),
+        install_requires=parse_requirements('requirement/user.txt'),
+        tests_require=parse_requirements('requirement/test.txt'),
         entry_points={'console_scripts': ['layered=layered.__main__:main']},
+        cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
     )
