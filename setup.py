@@ -1,3 +1,4 @@
+import os
 import sys
 import subprocess
 import setuptools
@@ -12,21 +13,22 @@ class TestCommand(test):
 
     def finalize_options(self):
         super().finalize_options()
-        self.test_args = []
-        self.test_suite = True
-
-    def run(self):
-        super().run()
-        self._call(['pep8', 'layered', 'test', 'setup.py'])
+        # New setuptools don't need this anymore, thus the try block.
+        try:
+            self.test_args = []
+            self.test_suite = 'True'
+        except AttributeError:
+            pass
 
     def run_tests(self):
-        import pytest
-        errno = pytest.main(['--cov=layered', 'test'])
-        sys.exit(errno)
+        self._call('python -m pytest --cov=layered test')
+        self._call('python -m pep8 layered test setup.py')
 
     def _call(self, command):
+        env = os.environ.copy()
+        env['PYTHONPATH'] = ''.join(':' + x for x in sys.path)
         try:
-            subprocess.check_call(command)
+            subprocess.check_call(command.split(), env=env)
         except subprocess.CalledProcessError as error:
             print('Command failed with exit code', error.returncode)
             sys.exit(error.returncode)
@@ -60,15 +62,14 @@ SETUP_REQUIRES = [
 ]
 
 INSTALL_REQUIRES = [
-    'matplotlib==1.5.0',
+    'matplotlib>=1.5.0',
 ]
 
 TESTS_REQUIRE = [
-    'setuptools',
+    'pep8>=1.6.2',
+    'pytest>=2.8.2',
+    'pytest-cov>=2.2.0',
     'coveralls',
-    'pep8==1.6.2',
-    'pytest==2.8.2',
-    'pytest-cov==2.2.0',
 ]
 
 
@@ -84,7 +85,7 @@ if __name__ == '__main__':
         packages=['layered'],
         setup_requires=SETUP_REQUIRES,
         install_requires=INSTALL_REQUIRES,
-        tests_require=SETUP_REQUIRES,
+        tests_require=TESTS_REQUIRE,
         cmdclass={'test': TestCommand, 'build_ext': BuildExtCommand},
         entry_points={'console_scripts': ['layered=layered.__main__:main']},
     )
