@@ -6,8 +6,8 @@
 [3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
 [4]: https://codeclimate.com/github/danijar/layered
 
-Layered Neural Network
-======================
+Layered
+=======
 
 This project is aims to be a clean reference implementation of feed forward
 neural networks. It's written in Python 3 published under the MIT license. I
@@ -23,22 +23,23 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
+Optionally, create a virtual environment and install Layered. You can safely
+ignore *"Failed building wheel"* messages. Then run it on an example problem.
 This will train a network to classify handwritten digits visualize progress.
-After some minutes, the error should drop below 3%. If you encounter errors,
-try running `sudo apt-get build-dep python3-matplotlib` or equivalent via your
-platform's package manager.
+After some minutes, the error should drop below 3%.
 
 ```bash
-sudo pip install layered
-wget http://git.io/vBPOH
-layered mnist-batch.yaml -v
+virtualenv . -p python3 && source bin/activate
+pip install layered
+curl -o mnist.yaml -L http://git.io/vBPOH
+layered mnist.yaml -v
 ```
 
 ### Problem Definition
 
 Learning problems are defined in YAML files and it's easy to define your own.
-This is how the example problem above looks like. Scroll down for tables of
-available cost and activation functions.
+This is how the example problem from above looks like. An overview of available
+cost and activation functions is available a few sections below.
 
 ```yaml
 dataset: Mnist
@@ -65,34 +66,36 @@ evaluate_every: 5000
 
 ### Command Line Arguments
 
-In addition to the YAML problem definition, these optional arguments are
-available.
+```
+layered [-h] [-v] [-l weights.npy] [-s weights.npy] problem.yaml
+```
 
-| Argument | Description |
-| :------- | :---------- |
-| -h, --help | Print usage instructions |
-| -s, --save | Path to dump the learned weights at each evaluation |
-| -l, --load | Path to load learned weights from at startup |
-| -v, --visual | Show a diagram of trainig costs and testing error |
-
-Learned weights are stored as Numpy binary arrays with the NPY extension.
+| Short | Long | Description |
+| :---- | :--- | :---------- |
+| `-h` | `--help` | Print usage instructions |
+| `-v` | `--visual` | Show a diagram of trainig costs and testing error |
+| `-l` | `--load` | Path to load learned weights from at startup |
+| `-s` | `--save` | Path to dump the learned weights at each evaluation |
 
 ### Contribution
 
 Optionally, create a virtual environment. Then install the dependencies.
+
 ```bash
 git clone git@github.com:danijar/layered.git && cd layered
 virtualenv . -p python3 && source bin/activate
-pip install -r requirement/core.txt
-pip install -r requirement/user.txt
 ```
 
-See if everything's working with `python -m layered problem/mnist-batch.yaml
--v` and start playing around with the code. For pull requests, please check
+See if everything's working.
+
+```bash
+python -m layered problem/modulo.yaml -v
+```
+
+Not you can start playing around with the code. For pull requests, please check
 that the linters and tests are passing.
 
 ```bash
-pip install -r requirement/test.txt
 python setup.py test
 ```
 

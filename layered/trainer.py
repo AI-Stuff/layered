@@ -48,7 +48,8 @@ class Trainer:
             212, 'line', 'Testing', 'Time', 'Error')
 
     def __call__(self):
-        """Train the model"""
+        """Train the model."""
+        print('Start training')
         repeats = repeated(self.problem.dataset.training, self.problem.epochs)
         batches = batched(repeats, self.problem.batch_size)
         for index, batch in enumerate(batches):

@@ -11,14 +11,14 @@ def main():
         'problem',
         help='path to the YAML problem definition')
     parser.add_argument(
-        '-s', '--save', default=None,
-        help='path to dump the learned weights at each evaluation')
+        '-v', '--visual', action='store_true',
+        help='show a diagram of training costs')
     parser.add_argument(
         '-l', '--load', default=None,
         help='path to load the weights from at startup')
     parser.add_argument(
-        '-v', '--visual', action='store_true',
-        help='show a diagram of training costs')
+        '-s', '--save', default=None,
+        help='path to dump the learned weights at each evaluation')
     args = parser.parse_args()
     print('Problem', os.path.split(args.problem)[1])
     problem = Problem(args.problem)
