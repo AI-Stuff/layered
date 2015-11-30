@@ -29,3 +29,6 @@ pip-selfcheck.json
 /build
 /dist
 *.eggs
+
+# Sphinx
+doc/_build
