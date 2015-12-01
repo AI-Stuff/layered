@@ -25,8 +25,8 @@ Instructions
 
 Optionally, create a virtual environment and install Layered. You can safely
 ignore *"Failed building wheel"* messages. Then run it on an example problem.
-This will train a network to classify handwritten digits visualize progress.
-After some minutes, the error should drop below 3%.
+This will train a network with 1.3M weights to classify handwritten digits
+visualize progress. After a couple of minutes, the error should drop below 3%.
 
 ```bash
 virtualenv . -p python3 && source bin/activate
@@ -84,6 +84,7 @@ Optionally, create a virtual environment. Then install the dependencies.
 ```bash
 git clone git@github.com:danijar/layered.git && cd layered
 virtualenv . -p python3 && source bin/activate
+pip install -e .
 ```
 
 See if everything's working.
@@ -92,8 +93,9 @@ See if everything's working.
 python -m layered problem/modulo.yaml -v
 ```
 
-Not you can start playing around with the code. For pull requests, please check
-that the linters and tests are passing.
+Now you can start playing around with the code. For pull requests, please
+squash the changes to a single commit and ensure that the linters and tests are
+passing.
 
 ```bash
 python setup.py test

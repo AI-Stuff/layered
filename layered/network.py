@@ -1,6 +1,5 @@
 import operator
 import numpy as np
-from layered.example import Example
 
 
 class Layer:
