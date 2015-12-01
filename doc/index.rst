@@ -1,98 +1,18 @@
-Layered Documentation
-=====================
+Welcome to Layered's documentation!
+===================================
 
-layered.activation
-------------------
+Contents:
 
-.. automodule:: layered.activation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 4
 
-layered.cost
-------------
+   modules
 
-.. automodule:: layered.cost
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-layered.dataset
----------------
+Indices and tables
+==================
 
-.. automodule:: layered.dataset
-    :members:
-    :undoc-members:
-    :show-inheritance:
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
-layered.evaluation
-------------------
-
-.. automodule:: layered.evaluation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.example
----------------
-
-.. automodule:: layered.example
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.gradient
-----------------
-
-.. automodule:: layered.gradient
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.network
----------------
-
-.. automodule:: layered.network
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.optimization
---------------------
-
-.. automodule:: layered.optimization
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.plot
-------------
-
-.. automodule:: layered.plot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.problem
----------------
-
-.. automodule:: layered.problem
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.trainer
----------------
-
-.. automodule:: layered.trainer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-layered.utility
----------------
-
-.. automodule:: layered.utility
-    :members:
-    :undoc-members:
-    :show-inheritance:

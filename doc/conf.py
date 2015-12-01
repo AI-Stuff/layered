@@ -2,23 +2,24 @@
 
 import sys
 import os
-import mock
+from unittest.mock import MagicMock
 
 
 sys.path.insert(0, os.path.abspath('../layered'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
 ]
 
 MOCK_MODULES = [
     'yaml',
     'numpy',
-    'matplotlib.pyploy',
+    'matplotlib.pyplot',
     'matplotlib.cbook',
 ]
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = MagicMock()
 
 ################################################################
 # General
@@ -37,6 +38,7 @@ pygments_style = 'sphinx'
 add_module_names = False
 todo_include_todos = False
 language = None
+htmlhelp_basename = 'Layereddoc'
 
 ################################################################
 # HTML
@@ -61,7 +63,7 @@ autodoc_mock_imports = MOCK_MODULES
 
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
-    keep = ['init']
+    keep = ['call', 'iter', 'getitem', 'setitem']
     if name.strip('_') in keep:
         return False
     return skip

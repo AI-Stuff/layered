@@ -3,10 +3,13 @@ import warnings
 import threading
 import time
 import matplotlib.pyplot as plt
-import matplotlib.cbook
+from matplotlib.cbook import mplDeprecation
 
 
-warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
+# Hide matplotlib deprecation message. Don't call the code if Sphinx inspects
+# the file mocking external imports.
+if issubclass(mplDeprecation, type):
+    warnings.filterwarnings('ignore', category=mplDeprecation)
 
 
 class Window:
