@@ -8,7 +8,7 @@ from matplotlib.cbook import mplDeprecation
 
 # Hide matplotlib deprecation message. Don't call the code if Sphinx inspects
 # the file mocking external imports.
-if issubclass(mplDeprecation, type):
+if isinstance(mplDeprecation, type):
     warnings.filterwarnings('ignore', category=mplDeprecation)
 
 
