@@ -70,7 +70,6 @@ TESTS_REQUIRE = [
     'pep8',
     'pytest',
     'pytest-cov',
-    'coveralls',
 ]
 
 
