@@ -1,18 +1,17 @@
-Welcome to Layered's documentation!
-===================================
-
-Contents:
+Layered Documentation
+=====================
 
 .. toctree::
-   :maxdepth: 4
 
-   modules
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   layered.activation
+   layered.cost
+   layered.dataset
+   layered.evaluation
+   layered.example
+   layered.gradient
+   layered.network
+   layered.optimization
+   layered.plot
+   layered.problem
+   layered.trainer
+   layered.utility
