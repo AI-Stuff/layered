@@ -1,10 +1,16 @@
 [![Build Status][1]][2]
 [![Code Climate][3]][4]
+[![PyPI Downloads][5]][6]
+[![Documentation][7]][8]
 
 [1]: https://travis-ci.org/danijar/layered.svg?branch=master
 [2]: https://travis-ci.org/danijar/layered
 [3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
 [4]: https://codeclimate.com/github/danijar/layered
+[5]: https://img.shields.io/pypi/dw/layered.svg
+[6]: pypi.python.org/pypi/layered
+[7]: https://readthedocs.org/projects/pip/badge/
+[8]: http://layered.readthedocs.org/en/latest/
 
 Layered
 =======
