@@ -8,9 +8,9 @@
 [3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
 [4]: https://codeclimate.com/github/danijar/layered
 [5]: https://img.shields.io/pypi/dw/layered.svg
-[6]: pypi.python.org/pypi/layered
+[6]: https://pypi.python.org/pypi/layered
 [7]: https://readthedocs.org/projects/pip/badge/
-[8]: http://layered.readthedocs.org/en/latest/
+[8]: https://layered.readthedocs.org/en/latest/
 
 Layered
 =======
