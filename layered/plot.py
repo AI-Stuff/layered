@@ -2,6 +2,7 @@ import collections
 import warnings
 import threading
 import time
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.cbook import mplDeprecation
 
@@ -10,6 +11,11 @@ from matplotlib.cbook import mplDeprecation
 # the file mocking external imports.
 if isinstance(mplDeprecation, type):
     warnings.filterwarnings('ignore', category=mplDeprecation)
+
+
+if matplotlib.get_backend() not in matplotlib.rcsetup.interactive_bk:
+    print('No visual backend available. Maybe you are inside a virtualenv '
+          'that was created without --system-site-packages.')
 
 
 class Window:
