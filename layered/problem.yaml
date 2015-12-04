@@ -1,0 +1,44 @@
+dataset:
+  type: Dataset
+  module: layered.dataset
+cost:
+  type: Cost
+  module: layered.cost
+  default: Squared
+layers:
+  type: list
+  content:
+    type: Layer
+    module: layered.network
+    content:
+      activation:
+        type: Activation
+        module: layered.activation
+        default: Sigmoid
+      size:
+        type: int
+init_weights:
+  type: InitWeights
+  module: layered.init_weights
+  content:
+    distribution:
+      type: Distribution
+      module: layered.init_weights
+  default: {type: Xavier, distribution: Normal}
+learning_rate:
+  type: LearningRate
+  module: layered.optimization
+  default: {type: Constant, rate: 0.1}
+epochs:
+  type: int
+  default: 1
+batch_size:
+  type: int
+  default: 1
+momentum:
+  type: float
+weight_decay:
+  type: float
+evaluate_every:
+  type: int
+  default: 1000

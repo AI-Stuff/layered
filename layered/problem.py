@@ -1,104 +1,114 @@
+import sys
 import os
 import yaml
-import layered.cost
-import layered.dataset
-import layered.activation
-from layered.network import Layer
+
+
+SCHEMA = os.path.join(os.path.dirname(__file__), 'problem.yaml')
 
 
 class Problem:
 
-    def __init__(self, content=None):
+    def __init__(self, definition=None, schema=SCHEMA):
+        self.schema = {'type': 'dict', 'content': self._load_yaml(schema)}
+        definition = self._load_yaml(definition)
+        self.__dict__.update(self._parse(definition, self.schema))
+        self._check_invariants()
+
+    def _check_invariants(self):
+        # TODO: Write proper tests and remove this conditional.
+        if not self.layers:
+            return
+        data_in = len(self.dataset.training[0].data)
+        data_out = len(self.dataset.training[0].target)
+        layer_in = self.layers[0].size
+        layer_out = self.layers[-1].size
+        assert layer_in == data_in, (
+            'the size of the input layer {} must match the data {}.'
+            .format(layer_in, data_in))
+        assert layer_out == data_out, (
+            'the size of the output layer {} must match the labels {}.'
+            .format(layer_out, data_out))
+
+    def _parse(self, value, schema):
         """
-        Construct a problem. If content is specified, try to load it as a YAML
-        path and otherwise treat it as an inline YAML string.
+        Recursively parse a definition against a schema. This includes
+        importing modules and looking for types in there.
         """
-        if content and os.path.isfile(content):
-            with open(content) as file_:
-                self.parse(file_)
-        elif content:
-            self.parse(content)
-        self._validate()
+        if isinstance(value, dict):
+            default = schema.get('default', {}).copy()
+            default.update(value)
+            value = default
+            return self._parse_object(value, schema)
+        elif isinstance(value, list):
+            return self._parse_list(value, schema)
+        elif isinstance(value, str):
+            return self._parse_object({'type': value}, schema)
+        else:
+            return self._parse_value(value, schema)
 
-    def __str__(self):
-        keys = self.__dict__.keys() & self._defaults().keys()
-        return str({x: getattr(self, x) for x in keys})
+    def _parse_object(self, value, schema):
+        Type = self._parse_type(schema, value)
+        if 'type' in value:
+            del value['type']
+        kwargs = schema.get('content', {}).copy()
+        kwargs.update(value)
+        kwargs = {k: self._parse(v, schema.get('content', {}).get(k, {}))
+                  for k, v in kwargs.items()}
+        return self._instantiate(Type, **kwargs)
 
-    def parse(self, definition):
-        definition = yaml.load(definition)
-        self._load_definition(definition)
-        self._load_symbols()
-        self._load_layers()
-        self._load_weight_tying()
-        assert not definition, (
-            'unknown properties {} in problem definition'
-            .format(', '.join(definition.keys())))
+    def _parse_list(self, value, schema):
+        Type = self._parse_type(schema)
+        elements = [self._parse(x, schema['content']) for x in value]
+        return Type(elements)
 
-    def _load_definition(self, definition):
-        # The empty dictionary causes defaults to be loaded even if the
-        # definition is None.
-        if not definition:
-            definition = {}
-        for name, default in self._defaults().items():
-            type_ = type(default)
-            self.__dict__[name] = type_(definition.pop(name, default))
+    def _parse_value(self, value, schema):
+        if 'type' not in schema:
+            return value
+        Type = self._parse_type(schema)
+        return self._instantiate(Type, value)
 
-    def _load_symbols(self):
-        # pylint: disable=attribute-defined-outside-init
-        self.cost = self._find_symbol(layered.cost, self.cost)()
-        self.dataset = self._find_symbol(layered.dataset, self.dataset)()
-
-    def _load_layers(self):
-        for index, layer in enumerate(self.layers):
-            size, activation = layer.pop('size'), layer.pop('activation')
-            activation = self._find_symbol(layered.activation, activation)
-            self.layers[index] = Layer(size, activation)
-
-    def _load_weight_tying(self):
-        # pylint: disable=attribute-defined-outside-init
-        self.weight_tying = [[y.split(',') for y in x]
-                             for x in self.weight_tying]
-        for i, group in enumerate(self.weight_tying):
-            for j, slices in enumerate(group):
-                for k, slice_ in enumerate(slices):
-                    slice_ = [int(s) if s else None for s in slice_.split(':')]
-                    self.weight_tying[i][j][k] = slice(*slice_)
-        for i, group in enumerate(self.weight_tying):
-            for j, slices in enumerate(group):
-                assert not slices[0].start and not slices[0].step, (
-                    'Ranges are not allowed in the first dimension.')
-                self.weight_tying[i][j][0] = slices[0].stop
-
-    def _find_symbol(self, module, name, fallback=None):
-        """
-        Find the symbol of the specified name inside the module or raise an
-        exception.
-        """
-        if not hasattr(module, name) and fallback:
-            return self._find_symbol(module, fallback, None)
-        return getattr(module, name)
-
-    def _validate(self):
-        num_input = len(self.dataset.training[0].data)
-        num_output = len(self.dataset.training[0].target)
-        if self.layers:
-            assert self.layers[0].size == num_input, (
-                'the size of the input layer must match the training data')
-            assert self.layers[-1].size == num_output, (
-                'the size of the output layer must match the training labels')
+    def _parse_type(self, schema, value=None):
+        scopes = [__builtins__]
+        # Import source module if provided.
+        module = schema.get('module', None)
+        if module:
+            __import__(module)
+            scopes.insert(0, sys.modules[module])
+        # Find base type.
+        assert 'type' in schema, 'Each property in the schema must have a type'
+        Base = self._find_type(schema['type'], scopes)
+        # Try to find and validate inherited type.
+        Type = Base
+        if isinstance(value, dict) and 'type' in value:
+            name = value['type'] if 'type' in value else value
+            Type = self._find_type(name, scopes)
+            assert issubclass(Type, Base), (
+                'Expected type compatible to {} but got {}.'
+                .format(Base.__name__, Type.__name__))
+        return Type
 
     @staticmethod
-    def _defaults():
-        return {
-            'cost': 'SquaredError',
-            'dataset': 'Modulo',
-            'layers': [],
-            'epochs': 1,
-            'batch_size': 1,
-            'learning_rate': 0.1,
-            'momentum': 0.0,
-            'weight_scale': 0.1,
-            'weight_decay': 0.0,
-            'weight_tying': [],
-            'evaluate_every': 1000,
-        }
+    def _find_type(name, scopes):
+        name = str(name)
+        for scope in scopes:
+            if isinstance(scope, dict) and name in scope:
+                return scope[name]
+            if hasattr(scope, name):
+                return getattr(scope, name)
+        raise NameError('Could not find type ' + name)
+
+    @staticmethod
+    def _instantiate(Type, *args, **kwargs):
+        try:
+            return Type(*args, **kwargs)
+        except TypeError as e:
+            print('Wrong parameters for {}.'.format(Type.__name__))
+            raise e
+
+    @staticmethod
+    def _load_yaml(source):
+        """Load a YAML file or string."""
+        if source and os.path.isfile(source):
+            with open(source) as file_:
+                return yaml.load(file_)
+        return yaml.load(source)

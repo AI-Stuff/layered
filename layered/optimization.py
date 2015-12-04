@@ -1,3 +1,18 @@
+class LearningRate:
+
+    def __call__(self):
+        raise NotImplementedError
+
+
+class Constant(LearningRate):
+
+    def __init__(self, rate=0.01):
+        self.rate = rate
+
+    def __call__(self):
+        return self.rate
+
+
 class GradientDecent:
     """
     Adapt the weights in the opposite direction of the gradient to reduce the

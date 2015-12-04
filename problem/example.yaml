@@ -1,0 +1,20 @@
+dataset: Modulo
+cost: CrossEntropy
+layers:
+- activation: Linear
+  size: 32
+- activation: Relu
+  size: 700
+- activation: Softmax
+  size: 7
+init_weights:
+  type: Xavier
+  distribution: Normal
+learning_rate:
+  type: Constant
+  rate: 0.1
+epochs: 5
+momentum: 0.9
+batch_size: 1
+weight_decay: 0.01
+evaluate_every: 10000

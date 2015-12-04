@@ -126,11 +126,11 @@ num_inputs = 784
 num_outputs = 10
 
 network = Network([
-    Layer(num_inputs, Identity),
-    Layer(700, Relu),
-    Layer(500, Relu),
-    Layer(300, Relu),
-    Layer(num_outputs, Softmax),
+    Layer(num_inputs, Identity()),
+    Layer(700, Relu()),
+    Layer(500, Relu()),
+    Layer(300, Relu()),
+    Layer(num_outputs, Softmax()),
 ])
 ```
 

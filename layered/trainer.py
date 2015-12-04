@@ -30,8 +30,7 @@ class Trainer:
                 'weights to load must match problem definition')
             self.weights.flat = loaded
         else:
-            self.weights.flat = np.random.normal(
-                0, self.problem.weight_scale, len(self.weights.flat))
+            self.problem.init_weights(self.weights)
 
     def _init_training(self):
         """Classes needed during training."""
@@ -88,7 +87,7 @@ class Trainer:
         gradient = self.momentum(gradient, self.problem.momentum)
         gradient = self.tying(gradient)
         self.weights = self.decent(
-            self.weights, gradient, self.problem.learning_rate)
+            self.weights, gradient, self.problem.learning_rate())
         self.weights = self.decay(self.weights, self.problem.weight_decay)
         self._visualize(batch)
         self._evaluate(index)
