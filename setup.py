@@ -76,7 +76,7 @@ TESTS_REQUIRE = [
 if __name__ == '__main__':
     setuptools.setup(
         name='layered',
-        version='0.1.4',
+        version='0.1.5',
         description=DESCRIPTION,
         url='http://github.com/danijar/layered',
         author='Danijar Hafner',

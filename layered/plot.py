@@ -3,6 +3,7 @@ import warnings
 import threading
 import time
 import matplotlib
+matplotlib.use('TkAgg')  # noqa
 import matplotlib.pyplot as plt
 from matplotlib.cbook import mplDeprecation
 

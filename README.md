@@ -35,8 +35,7 @@ This will train a network with 1.3M weights to classify handwritten digits
 visualize progress. After a couple of minutes, the error should drop below 3%.
 
 ```bash
-virtualenv . -p python3 --system-site-packages
-source bin/activate
+virtualenv . -p python3 --system-site-packages && source bin/activate
 pip install layered
 curl -o mnist.yaml -L http://git.io/vBPOH
 layered mnist.yaml -v
@@ -90,7 +89,7 @@ Optionally, create a virtual environment. Then install the dependencies.
 
 ```bash
 git clone git@github.com:danijar/layered.git && cd layered
-virtualenv . -p python3 && source bin/activate
+virtualenv . -p python3 --system-site-packages && source bin/activate
 pip install -e .
 ```
 
