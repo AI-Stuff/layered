@@ -29,10 +29,11 @@ network still trained but I found the mistake by numerical gradient checking.
 Instructions
 ------------
 
-Optionally, create a virtual environment and install Layered. You can safely
-ignore *"Failed building wheel"* messages. Then run it on an example problem.
-This will train a network with 1.3M weights to classify handwritten digits
-visualize progress. After a couple of minutes, the error should drop below 3%.
+Optionally, create a virtual environment. The install and run Layered on an
+example problem. This will train a network with 1.3M weights to classify
+handwritten digits. You will see two charts for the current training costs and
+the error on the test set. After a couple of minutes, the error should drop
+below 3%.
 
 ```bash
 virtualenv . -p python3 --system-site-packages && source bin/activate
@@ -40,6 +41,12 @@ pip install layered
 curl -o mnist.yaml -L http://git.io/vBPOH
 layered mnist.yaml -v
 ```
+
+### Troubleshooting
+
+- You can safely ignore *"Failed building wheel"* messages during installation.
+- If you encounter crashes at startup, install `python3-matplotlib` or
+  equivalent using your package manager.
 
 ### Problem Definition
 
