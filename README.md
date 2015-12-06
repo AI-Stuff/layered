@@ -16,24 +16,22 @@ Layered
 =======
 
 This project is aims to be a clean reference implementation of feed forward
-neural networks. It's written in Python 3 published under the MIT license. I
-started this project as part of my efforts to understand the concepts of deep
-learning.
+neural networks. It's written in Python 3 and published under the MIT license.
+I started this project as part of my efforts to understand the concepts of deep
+learning. You can use this repository as guidance if you want to implement
+neural networks what I highly recommend if you are interested in understanding
+them.
 
-You can use this repository as guidance if you want to implement neural
-networks what I highly recommend if you are interested in understanding them.
-It's a good way to build intuition and allows you to verify your understanding.
-For example, I had a small misunderstanding of the backpropagation formula. My
-network still trained but I found the mistake by numerical gradient checking.
+Please don't hestitate to send feedback and ideas to me at mail@danijar.com and
+open issues if something's not working.
 
 Instructions
 ------------
 
-Optionally, create a virtual environment. The install and run Layered on an
-example problem. This will train a network with 1.3M weights to classify
-handwritten digits. You will see two charts for the current training costs and
-the error on the test set. After a couple of minutes, the error should drop
-below 3%.
+This will train a network with 1.3M weights to classify handwritten digits and
+visualize the progress. After a couple of minutes, the error should drop below
+3%. To install globally, just skip the first command. Solutions to all reported
+problems can be found in the troubleshooting section.
 
 ```bash
 virtualenv . -p python3 --system-site-packages && source bin/activate
@@ -42,17 +40,11 @@ curl -o mnist.yaml -L http://git.io/vBPOH
 layered mnist.yaml -v
 ```
 
-### Troubleshooting
-
-- You can safely ignore *"Failed building wheel"* messages during installation.
-- If you encounter crashes at startup, install `python3-matplotlib` or
-  equivalent using your package manager.
-
 ### Problem Definition
 
-Learning problems are defined in YAML files and it's easy to define your own.
-This is how the example problem from above looks like. An overview of available
-cost and activation functions is available a few sections below.
+Learning problems are defined in YAML files and it's easy to create your own.
+An overview of available cost and activation functions is available a few
+sections below.
 
 ```yaml
 dataset: Mnist
@@ -116,14 +108,14 @@ python setup.py test
 
 If you have questions, feel free to contact me.
 
-Manual Guide
-------------
+Advanced Guide
+--------------
 
 In this guide you will learn how to create and train models manually rather
 than using the problem definitions to gain more insight into training neural
 networks. Let's start!
 
-### Network Definition
+### Step 1: Network Definition
 
 A network is defined by its layers. The parameters for a layer are the amount
 of neurons and the activation function. The first layer has a linear activation
@@ -145,7 +137,7 @@ network = Network([
 ])
 ```
 
-### Activation Functions
+### Step 2: Activation Functions
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
@@ -154,14 +146,12 @@ network = Network([
 | Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
 | Softmax | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
 
-### Weight Initialization
+### Step 3: Weight Initialization
 
 The weight matrices of the network are handed to algorithms like
-backpropagation, gradient decent and weight decay.
-
-If the initial weights of a neural network would be zero, no activation would
-be passed to the deeper layers. So we start with random values sampled from a
-normal distribution.
+backpropagation, gradient decent and weight decay. If the initial weights of a
+neural network would be zero, no activation would be passed to the deeper
+layers. So we start with random values sampled from a normal distribution.
 
 ```python
 from layered.network import Matrices
@@ -170,7 +160,7 @@ weights = Matrices(network.shapes)
 weights.flat = np.random.normal(0, weight_scale, len(weights.flat))
 ```
 
-### Optimization Algorithm
+### Step 4: Optimization Algorithm
 
 Now let's learn good weights with standard backpropagation and gradient decent.
 The classes for this can be imported from the `gradient` and `optimization`
@@ -185,14 +175,14 @@ backprop = Backprop(network, cost=Squared())
 decent = GradientDecent()
 ```
 
-### Cost Functions
+### Step 5: Cost Functions
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
 | Squared | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
 | CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | ![Cross Entropy](image/cross-entropy.png) |
 
-### Dataset and Training
+### Step 6: Dataset and Training
 
 Datasets are automatically downloaded and cached. We just iterate over the
 training examples and train the weights on them.
@@ -206,7 +196,7 @@ for example dataset.training:
     weights = decent(weights, gradient, learning_rate=0.1)
 ```
 
-### Evaluation
+### Step 7: Evaluation
 
 Finally, we want to see what our network has learned. We do this by letting the
 network predict classes for the testing examples. The strongest class is the
@@ -223,5 +213,20 @@ for example in dataset.testing:
 print('Testing error', round(100 * error, 2), '%')
 ```
 
-Please don't hestitate to send feedback and ideas to me at mail@danijar.com and
-open issues if something's not working.
+Troubleshooting
+---------------
+
+### Failed building wheel
+
+You can safely ignore this messages during installation.
+
+### Crash at startup
+
+Install `python3-matplotlib` or equivalent using your package manager. Ensure
+you create your virtualenv with `--system-site-packages`.
+
+### Did you encounter another problem?
+
+Please [open an issue][10].
+
+[10]: https://github.com/danijar/layered/issues
