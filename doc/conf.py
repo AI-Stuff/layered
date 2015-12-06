@@ -5,7 +5,7 @@ import os
 from unittest.mock import MagicMock
 
 
-sys.path.insert(0, os.path.abspath('../layered'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
@@ -15,6 +15,7 @@ extensions = [
 MOCK_MODULES = [
     'yaml',
     'numpy',
+    'matplotlib',
     'matplotlib.pyplot',
     'matplotlib.cbook',
 ]

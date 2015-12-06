@@ -1,22 +1,22 @@
 import collections
-import warnings
+import inspect
 import threading
 import time
+import warnings
 import matplotlib
 matplotlib.use('TkAgg')  # noqa
 import matplotlib.pyplot as plt
-from matplotlib.cbook import mplDeprecation
 
 
-# Hide matplotlib deprecation message. Don't call the code if Sphinx inspects
-# the file mocking external imports.
-if isinstance(mplDeprecation, type):
+# Don't call the code if Sphinx inspects the file mocking external imports.
+if inspect.ismodule(matplotlib):
+    # Hide matplotlib deprecation message.
+    from matplotlib.cbook import mplDeprecation
     warnings.filterwarnings('ignore', category=mplDeprecation)
-
-
-if matplotlib.get_backend() not in matplotlib.rcsetup.interactive_bk:
-    print('No visual backend available. Maybe you are inside a virtualenv '
-          'that was created without --system-site-packages.')
+    # Ensure available interactive backend.
+    if matplotlib.get_backend() not in matplotlib.rcsetup.interactive_bk:
+        print('No visual backend available. Maybe you are inside a virtualenv '
+              'that was created without --system-site-packages.')
 
 
 class Window:
