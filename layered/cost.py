@@ -4,10 +4,10 @@ import numpy as np
 class Cost:
 
     def __call__(self, prediction, target):
-        raise NotImplemented
+        raise NotImplementedError
 
     def delta(self, prediction, target):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class Squared(Cost):

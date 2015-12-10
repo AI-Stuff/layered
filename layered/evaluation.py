@@ -7,7 +7,7 @@ def compute_costs(network, weights, cost, examples):
     return costs
 
 
-def compute_error(network, weights, cost, examples):
+def compute_error(network, weights, examples):
     prediction = [network.feed(weights, x.data) for x in examples]
     error = sum(bool(np.argmax(x) != np.argmax(y.target)) for x, y in
                 zip(prediction, examples)) / len(examples)

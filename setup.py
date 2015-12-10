@@ -11,10 +11,15 @@ class TestCommand(test):
     description = 'run tests, linters and create a coverage report'
     user_options = []
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.returncode = 0
+
     def finalize_options(self):
         super().finalize_options()
         # New setuptools don't need this anymore, thus the try block.
         try:
+            # pylint: disable=attribute-defined-outside-init
             self.test_args = []
             self.test_suite = 'True'
         except AttributeError:
@@ -22,7 +27,10 @@ class TestCommand(test):
 
     def run_tests(self):
         self._call('python -m pytest --cov=layered test')
-        self._call('python -m pep8 layered test setup.py')
+        self._call('python -m pylint layered')
+        self._call('python -m pylint test')
+        self._call('python -m pylint setup.py')
+        self._check()
 
     def _call(self, command):
         env = os.environ.copy()
@@ -30,8 +38,12 @@ class TestCommand(test):
         try:
             subprocess.check_call(command.split(), env=env)
         except subprocess.CalledProcessError as error:
-            print('Command failed with exit code', error.returncode)
-            sys.exit(error.returncode)
+            self.returncode = error.returncode
+
+    def _check(self):
+        if self.returncode:
+            print('Command failed with exit code', self.returncode)
+            sys.exit(self.returncode)
 
 
 class BuildExtCommand(build_ext):
@@ -45,13 +57,6 @@ class BuildExtCommand(build_ext):
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
         self.include_dirs.append(numpy.get_include())
-
-
-def parse_requirements(filename):
-    with open(filename) as file_:
-        lines = map(lambda x: x.strip('\n'), file_.readlines())
-    lines = filter(lambda x: x and not x.startswith('#'), lines)
-    return list(lines)
 
 
 DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
@@ -68,16 +73,16 @@ INSTALL_REQUIRES = [
 ]
 
 TESTS_REQUIRE = [
-    'pep8',
     'pytest',
     'pytest-cov',
+    'pylint',
 ]
 
 
 if __name__ == '__main__':
     setuptools.setup(
         name='layered',
-        version='0.1.5',
+        version='0.1.6',
         description=DESCRIPTION,
         url='http://github.com/danijar/layered',
         author='Danijar Hafner',

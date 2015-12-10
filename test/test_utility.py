@@ -1,4 +1,4 @@
-import pytest
+# pylint: disable=no-self-use
 import random
 from layered.utility import repeated, batched, averaged
 
@@ -47,6 +47,7 @@ class TestRepeated:
 class TestBatched:
 
     def test_result(self):
+        # pylint: disable=redefined-variable-type
         iterable = range(14)
         batches = batched(iterable, 3)
         batches = list(batches)

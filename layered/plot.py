@@ -1,8 +1,8 @@
 import collections
-import inspect
-import threading
 import time
 import warnings
+import inspect
+import threading
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -25,6 +25,7 @@ class Window:
 
     def __init__(self, refresh=0.5):
         self.refresh = refresh
+        self.figure = None
         self._init_worker()
 
     def plot(self, *args, **kwargs):
@@ -67,6 +68,7 @@ class Plot:
 
     def __init__(self, figure, lock, tile=111, style='line',
                  title='', xlabel='', ylabel='', fixed=None):
+        # pylint: disable=too-many-arguments
         assert style in type(self).STYLES
         self.figure = figure
         self.lock = lock
@@ -78,7 +80,7 @@ class Plot:
             self.width = fixed
         else:
             self.xdata = []
-            self.ydata = []
+            self.ydata = []  # pylint: disable=redefined-variable-type
             self.width = 0
         styles = type(self).STYLES[style]
         with self.lock:

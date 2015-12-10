@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init
 import numpy as np
 from layered.gradient import BatchBackprop
 from layered.network import Network, Matrices
@@ -77,8 +78,8 @@ class Trainer:
             return
         if self.save:
             np.save(self.save, self.weights)
-        error = compute_error(self.network, self.weights,
-                              self.problem.cost, self.problem.dataset.testing)
+        error = compute_error(
+            self.network, self.weights, self.problem.dataset.testing)
         print('Batch {} test error {:.2f}%'.format(index, 100 * error))
         if self.visual:
             self.plot_testing([error])

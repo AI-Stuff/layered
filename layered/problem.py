@@ -43,6 +43,7 @@ class Problem:
             self.__dict__[name] = type_(definition.pop(name, default))
 
     def _load_symbols(self):
+        # pylint: disable=attribute-defined-outside-init
         self.cost = self._find_symbol(layered.cost, self.cost)()
         self.dataset = self._find_symbol(layered.dataset, self.dataset)()
 
@@ -70,7 +71,8 @@ class Problem:
             assert self.layers[-1].size == num_output, (
                 'the size of the output layer must match the training labels')
 
-    def _defaults(self):
+    @staticmethod
+    def _defaults():
         return {
             'cost': 'Squared',
             'dataset': 'Regression',

@@ -1,9 +1,9 @@
-from urllib.request import urlopen
 import array
-import gzip
 import os
 import shutil
 import struct
+import gzip
+from urllib.request import urlopen
 import numpy as np
 from layered.example import Example
 from layered.utility import ensure_folder
@@ -58,7 +58,8 @@ class Dataset:
             shutil.copyfileobj(response, file_)
         return filename
 
-    def split(self, examples, ratio=0.8):
+    @staticmethod
+    def split(examples, ratio=0.8):
         """
         Utility function that can be used within the parse() implementation of
         sub classes to split a list of example into two lists for training and
@@ -150,11 +151,13 @@ class Mnist(Dataset):
     ]
 
     def parse(self, train_x, train_y, test_x, test_y):
+        # pylint: disable=arguments-differ
         training = list(self.read(train_x, train_y))
         testing = list(self.read(test_x, test_y))
         return training, testing
 
-    def read(self, data, labels):
+    @staticmethod
+    def read(data, labels):
         images = gzip.open(data, 'rb')
         _, size, rows, cols = struct.unpack('>IIII', images.read(16))
         image_bin = array.array('B', images.read())

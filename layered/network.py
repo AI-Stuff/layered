@@ -102,14 +102,14 @@ class Matrices:
     def _operation(self, other, operation):
         try:
             other = other.flat
-        except:
+        except AttributeError:
             pass
         return Matrices(self.shapes, operation(self.flat, other))
 
     def _locate(self, index):
         if index < 0:
             index = len(self.shapes) + index
-        if not (0 <= index < len(self.shapes)):
+        if not 0 <= index < len(self.shapes):
             raise IndexError
         offset = sum(x * y for x, y in self.shapes[:index])
         length = operator.mul(*self.shapes[index])
@@ -152,14 +152,16 @@ class Network:
         # Return the activations of the output layer.
         return self.layers[-1].outgoing
 
-    def forward(self, weight, activations):
+    @staticmethod
+    def forward(weight, activations):
         # Add bias input of one.
         activations = np.insert(activations, 0, 1)
         assert activations[0] == 1
         right = activations.dot(weight)
         return right
 
-    def backward(self, weight, activations):
+    @staticmethod
+    def backward(weight, activations):
         left = activations.dot(weight.transpose())
         # Don't expose the bias input of one.
         left = left[1:]

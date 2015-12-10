@@ -4,7 +4,7 @@ import numpy as np
 class Activation:
 
     def __call__(self, incoming):
-        raise NotImplemented
+        raise NotImplementedError
 
     def delta(self, incoming, outgoing, above):
         """
@@ -13,7 +13,7 @@ class Activation:
         forward pass and above is the derivative of the cost with respect to
         the outgoing activation.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class Linear(Activation):
