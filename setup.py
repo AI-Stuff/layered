@@ -38,11 +38,11 @@ class TestCommand(test):
         try:
             subprocess.check_call(command.split(), env=env)
         except subprocess.CalledProcessError as error:
-            self.returncode = error.returncode
+            print('Command failed with exit code', error.returncode)
+            self.returncode = 1
 
     def _check(self):
         if self.returncode:
-            print('Command failed with exit code', self.returncode)
             sys.exit(self.returncode)
 
 

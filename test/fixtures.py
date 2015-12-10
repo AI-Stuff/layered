@@ -14,7 +14,7 @@ def random_matrices(shapes):
 
 @pytest.fixture(params=[(5, 5, 6, 3)])
 def weights_and_gradient(request):
-    shapes = pairwise(request.param)
+    shapes = list(pairwise(request.param))
     weights = random_matrices(shapes)
     gradient = random_matrices(shapes)
     return weights, gradient

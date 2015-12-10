@@ -1,4 +1,4 @@
-import pytest
+# pylint: disable=no-self-use
 
 
 class TestPlot:

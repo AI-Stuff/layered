@@ -2,15 +2,14 @@
 dataset: Mnist
 cost: CrossEntropy
 layers:
-  - activation: Linear
-    size: 784
-  - activation: Relu
-    size: 700
-  - activation: Relu
-    size: 400
-  - activation: Softmax
-    size: 10
-training_rounds: 5
+- activation: Linear
+  size: 784
+- activation: Relu
+  size: 700
+- activation: Relu
+  size: 400
+- activation: Softmax
+  size: 10
 epochs: 2
 learning_rate: 0.001
 momentum: 0

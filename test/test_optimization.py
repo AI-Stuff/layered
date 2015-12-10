@@ -1,7 +1,7 @@
-import pytest
+# pylint: disable=wildcard-import, unused-wildcard-import, no-self-use
 import numpy as np
 from layered.optimization import GradientDecent, Momentum, WeightDecay
-from test.fixtures import weights_and_gradient
+from test.fixtures import *
 
 
 class TestGradientDecent:
@@ -22,4 +22,14 @@ class TestMomentum:
         momentum = Momentum()
         for _ in range(5):
             gradient = momentum(gradient, rate=0)
-        assert gradient == original
+        assert np.allclose(gradient, original)
+
+
+class TestWeightDecay:
+
+    def test_calculation(self, weights_and_gradient):
+        weights, _ = weights_and_gradient
+        decay = WeightDecay()
+        updated = decay(weights, 0.1)
+        reference = 0.9 * weights
+        assert np.allclose(updated, reference)
