@@ -5,7 +5,7 @@ import numpy as np
 class Layer:
 
     def __init__(self, size, activation):
-        assert isinstance(size, int) and size
+        assert size and isinstance(size, int)
         self.size = size
         self.activation = activation()
         self.incoming = np.zeros(size)

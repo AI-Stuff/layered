@@ -1,6 +1,7 @@
 [MESSAGES CONTROL]
 
 disable=
+    locally-disabled,
     too-many-instance-attributes,
     missing-docstring,
     fixme,

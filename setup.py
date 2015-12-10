@@ -35,6 +35,7 @@ class TestCommand(test):
     def _call(self, command):
         env = os.environ.copy()
         env['PYTHONPATH'] = ''.join(':' + x for x in sys.path)
+        print('Run command', command)
         try:
             subprocess.check_call(command.split(), env=env)
         except subprocess.CalledProcessError as error:

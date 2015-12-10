@@ -25,6 +25,7 @@ pip-selfcheck.json
 # Pytest
 .cache
 .coverage
+.coverage*
 
 # Setuptools
 /build

@@ -1,3 +1,4 @@
+import math
 import functools
 import multiprocessing
 import numpy as np
@@ -167,8 +168,12 @@ class ParallelBackprop:
         self.pool = multiprocessing.Pool(self.workers)
 
     def __call__(self, weights, examples):
-        batch_size = (len(examples) + self.workers - 1) // self.workers
+        batch_size = int(math.ceil(len(examples) / self.workers))
         batches = list(batched(examples, batch_size))
+        sizes = [len(x) / batch_size for x in batches]
+        sizes = [x / sum(sizes) for x in sizes]
+        assert len(batches) <= self.workers
+        assert sum(sizes) == 1
         compute = functools.partial(self.backprop, weights)
         gradients = self.pool.map(compute, batches)
-        return sum(gradients) / batch_size
+        return sum(x * y for x, y in zip(gradients, sizes))
