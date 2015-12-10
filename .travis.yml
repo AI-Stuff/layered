@@ -4,9 +4,10 @@ python:
   - "3.4"
   - "3.3"
 install:
-  - python setup.py install
   - pip install coveralls
 script:
   - python setup.py test
+  - python setup.py install
+  - python setup.py build_sphinx
 after_success:
   - coveralls
