@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Example:
     """
     Immutable class representing one example in a dataset.
@@ -6,8 +9,8 @@ class Example:
     __slots__ = ('_data', '_target')
 
     def __init__(self, data, target):
-        self._data = data.astype(float)
-        self._target = target.astype(float)
+        self._data = np.array(data, dtype=float)
+        self._target = np.array(target, dtype=float)
 
     @property
     def data(self):

@@ -82,6 +82,19 @@ class Dataset:
         return os.path.join(self.folder(), 'testing.npy')
 
 
+class Test(Dataset):
+
+    cache = False
+
+    def __init__(self, amount=10):
+        self.amount = amount
+        super().__init__()
+
+    def parse(self):
+        examples = [Example([1, 2, 3], [1, 2, 3]) for _ in range(self.amount)]
+        return self.split(examples)
+
+
 class Regression(Dataset):
     """
     Synthetically generated dataset for regression. The task is to predict the
@@ -170,7 +183,7 @@ class Mnist(Dataset):
         labels.close()
 
         for i in range(size):
-            data = image_bin[i*rows*cols:(i+1)*rows*cols]
+            data = image_bin[i * rows * cols:(i + 1) * rows * cols]
             data = np.array(data).reshape(rows * cols) / 255
             target = np.zeros(10)
             target[label_bin[i]] = 1
