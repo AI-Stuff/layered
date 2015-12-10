@@ -20,9 +20,11 @@ class Momentum:
     def __call__(self, gradient, rate=0.9):
         if self.previous is None:
             self.previous = gradient.copy()
-        gradient = rate * self.previous + gradient
-        self.previous = gradient
-        return gradient.copy()
+        else:
+            assert self.previous.shape == gradient.shape
+            gradient += rate * self.previous
+            self.previous = gradient.copy()
+        return gradient
 
 
 class WeightDecay:

@@ -1,6 +1,7 @@
 import os
 import errno
 import functools
+import itertools
 
 
 def repeated(iterable, times):
@@ -62,3 +63,9 @@ def hstack_lines(blocks, sep=' '):
             output += cell.rjust(w, ' ') + sep
         output += '\n'
     return output
+
+
+def pairwise(iterable):
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
