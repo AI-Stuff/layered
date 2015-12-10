@@ -84,17 +84,13 @@ layered [-h] [-v] [-l weights.npy] [-s weights.npy] problem.yaml
 
 ### Contribution
 
-Optionally, create a virtual environment. Then install the dependencies.
+Optionally, create a virtual environment. Then install the dependencies. The
+last command is just to see if everything's working.
 
 ```bash
 git clone git@github.com:danijar/layered.git && cd layered
 virtualenv . -p python3 --system-site-packages && source bin/activate
 pip install -e .
-```
-
-See if everything's working.
-
-```bash
 python -m layered problem/modulo.yaml -v
 ```
 
@@ -222,8 +218,16 @@ You can safely ignore this messages during installation.
 
 ### Crash at startup
 
-Install `python3-matplotlib` or equivalent using your package manager. Ensure
-you create your virtualenv with `--system-site-packages`.
+Install or reinstall `python3-matplotlib` or equivalent using your package
+manager. Check if matplotlib works outside of the virtualenv.
+
+```python
+import matplotlib.pyplot as plt
+plt.plt([1, 2, 3, 4])
+plt.show()
+```
+
+Ensure you create your virtualenv with `--system-site-packages`.
 
 ### Did you encounter another problem?
 

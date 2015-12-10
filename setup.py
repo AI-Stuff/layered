@@ -58,6 +58,7 @@ DESCRIPTION = 'Clean reference implementation of feed forward neural networks'
 
 SETUP_REQUIRES = [
     'numpy',
+    'sphinx',
 ]
 
 INSTALL_REQUIRES = [

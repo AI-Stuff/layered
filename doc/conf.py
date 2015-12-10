@@ -17,7 +17,6 @@ MOCK_MODULES = [
     'numpy',
     'matplotlib',
     'matplotlib.pyplot',
-    'matplotlib.cbook',
 ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = MagicMock()

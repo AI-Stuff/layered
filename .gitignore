@@ -19,6 +19,7 @@ __pycache__/
 # Pip
 pip-selfcheck.json
 *.whl
+*.egg
 *.egg-info
 
 # Pytest
