@@ -24,7 +24,6 @@ def main():
     problem = Problem(args.problem)
     trainer = Trainer(problem, args.load, args.save, args.visual)
     trainer()
-    print('Done')
 
 
 if __name__ == '__main__':

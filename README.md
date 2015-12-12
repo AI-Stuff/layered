@@ -88,7 +88,7 @@ Optionally, create a virtual environment. Then install the dependencies. The
 last command is just to see if everything's working.
 
 ```bash
-git clone git@github.com:danijar/layered.git && cd layered
+git clone https://github.com/danijar/layered.git && cd layered
 virtualenv . -p python3 --system-site-packages && source bin/activate
 pip install -e .
 python -m layered problem/modulo.yaml -v

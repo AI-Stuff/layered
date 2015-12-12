@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init
+import functools
 import numpy as np
 from layered.gradient import BatchBackprop
 from layered.network import Network, Matrices
@@ -8,6 +8,7 @@ from layered.evaluation import compute_costs, compute_error
 
 
 class Trainer:
+    # pylint: disable=attribute-defined-outside-init
 
     def __init__(self, problem, load=None, save=None, visual=False):
         self.problem = problem
@@ -19,7 +20,7 @@ class Trainer:
         self._init_visualize()
 
     def _init_network(self):
-        """Define model and initialize weights"""
+        """Define model and initialize weights."""
         self.network = Network(self.problem.layers)
         self.weights = Matrices(self.network.shapes)
         if self.load:
@@ -32,7 +33,7 @@ class Trainer:
                 0, self.problem.weight_scale, len(self.weights.flat))
 
     def _init_training(self):
-        """Classes needed during training"""
+        """Classes needed during training."""
         self.backprop = BatchBackprop(self.network, self.problem.cost)
         self.momentum = Momentum()
         self.decent = GradientDecent()
@@ -41,22 +42,44 @@ class Trainer:
     def _init_visualize(self):
         if not self.visual:
             return
-        from layered.plot import Window
-        window = Window()
-        self.plot_training = window.plot(
-            211, 'dot', 'Training', 'Examples', 'Cost', fixed=1000)
-        self.plot_testing = window.plot(
-            212, 'line', 'Testing', 'Time', 'Error')
+        from layered.plot import Window, Plot
+        self.plot_training = Plot(
+            'Training', 'Examples', 'Cost', fixed=1000,
+            style={'linestyle': '', 'marker': '.'})
+        self.plot_testing = Plot('Testing', 'Time', 'Error')
+        self.window = Window()
+        self.window.register(211, self.plot_training)
+        self.window.register(212, self.plot_testing)
 
     def __call__(self):
-        """Train the model."""
+        """Train the model and visualize progress."""
         print('Start training')
         repeats = repeated(self.problem.dataset.training, self.problem.epochs)
         batches = batched(repeats, self.problem.batch_size)
-        for index, batch in enumerate(batches):
-            self._train(index, batch)
+        if self.visual:
+            self.window.start(functools.partial(self._train_visual, batches))
+        else:
+            self._train(batches)
 
-    def _train(self, index, batch):
+    def _train(self, batches):
+        for index, batch in enumerate(batches):
+            try:
+                self._batch(index, batch)
+            except KeyboardInterrupt:
+                print('\nAborted')
+                return
+        print('Done')
+
+    def _train_visual(self, batches, state):
+        for index, batch in enumerate(batches):
+            if not state.running:
+                print('\nAborted')
+                return
+            self._batch(index, batch)
+        print('Done')
+        state.running = False
+
+    def _batch(self, index, batch):
         gradient = self.backprop(self.weights, batch)
         gradient = self.momentum(gradient, self.problem.momentum)
         self.weights = self.decent(

@@ -7,7 +7,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-def init_matplotlib():
+# Don't call the code if Sphinx inspects the file mocking external imports.
+if inspect.ismodule(matplotlib):
     # Hide matplotlib deprecation message.
     warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
     # Ensure available interactive backend.
@@ -16,88 +17,126 @@ def init_matplotlib():
               'that was created without --system-site-packages.')
 
 
-# Don't call the code if Sphinx inspects the file mocking external imports.
-if inspect.ismodule(matplotlib):
-    init_matplotlib()
+class Interface:
+
+    def __init__(self, title='', xlabel='', ylabel='', style=None):
+        self._style = style or {}
+        self._title = title
+        self._xlabel = xlabel
+        self._ylabel = ylabel
+        self.xdata = []
+        self.ydata = []
+        self.width = 0
+        self.height = 0
+
+    @property
+    def style(self):
+        return self._style
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def xlabel(self):
+        return self._xlabel
+
+    @property
+    def ylabel(self):
+        return self._ylabel
+
+
+class State:
+
+    def __init__(self):
+        self.running = False
 
 
 class Window:
 
     def __init__(self, refresh=0.5):
         self.refresh = refresh
-        self.figure = None
-        self._init_worker()
-
-    def plot(self, *args, **kwargs):
-        return Plot(self.figure, self.lock, *args, **kwargs)
-
-    def _init_worker(self):
-        self.lock = threading.Lock()
-        self.lock.acquire()
-        self.thread = threading.Thread(target=self._work)
-        self.thread.start()
-        with self.lock:
-            return
-
-    def _init_figure(self):
+        self.thread = None
+        self.state = State()
         self.figure = plt.figure()
-        plt.show(block=False)
+        self.interfaces = []
+        plt.ion()
+        plt.show()
 
-    def _work(self):
-        self._init_figure()
-        self.lock.release()
-        while True:
-            before = time.time()
-            with self.lock:
-                self.figure.canvas.draw()
-            duration = time.time() - before
-            plt.pause(max(0.001, self.refresh - duration))
+    def register(self, position, interface):
+        axis = self.figure.add_subplot(
+            position, title=interface.title,
+            xlabel=interface.xlabel, ylabel=interface.ylabel)
+        axis.get_xaxis().set_ticks([])
+        line, = axis.plot(interface.xdata, interface.ydata, **interface.style)
+        self.interfaces.append((axis, line, interface))
+
+    def start(self, work):
+        """
+        Hand the main thread to the window and continue work in the provided
+        function. A state is passed as the first argument that contains a
+        `running` flag. The function is expected to exit if the flag becomes
+        false. The flag can also be set to false to stop the window event loop
+        and continue in the main thread after the `start()` call.
+        """
+        assert threading.current_thread() == threading.main_thread()
+        assert not self.state.running
+        self.state.running = True
+        self.thread = threading.Thread(target=work, args=(self.state,))
+        self.thread.start()
+        while self.state.running:
+            try:
+                before = time.time()
+                self.update()
+                duration = time.time() - before
+                plt.pause(max(0.001, self.refresh - duration))
+            except KeyboardInterrupt:
+                self.state.running = False
+                self.thread.join()
+                return
+
+    def stop(self):
+        """
+        Close the window and stops the worker thread. The main thread will
+        resume with the next command after the `start()` call.
+        """
+        assert threading.current_thread() == self.thread
+        assert self.state.running
+        self.state.running = False
+
+    def update(self):
+        """
+        Redraw the figure to show changed data. This is automatically called
+        after `start()` was run.
+        """
+        assert threading.current_thread() == threading.main_thread()
+        for axis, line, interface in self.interfaces:
+            line.set_xdata(interface.xdata)
+            line.set_ydata(interface.ydata)
+            axis.set_xlim(0, interface.width or 1, emit=False)
+            axis.set_ylim(0, interface.height or 1, emit=False)
+        self.figure.canvas.draw()
 
 
-class Plot:
+class Plot(Interface):
 
-    STYLES = {
-        'dot': {
-            'linestyle': '',
-            'color': 'blue',
-            'marker': '.',
-            'markersize': 5,
-        },
-        'line': {},
-    }
-
-    def __init__(self, figure, lock, tile=111, style='line',
-                 title='', xlabel='', ylabel='', fixed=None):
-        # pylint: disable=too-many-arguments
-        assert style in type(self).STYLES
-        self.figure = figure
-        self.lock = lock
-        self.height = 0
-        self.fixed = fixed
-        if fixed:
+    def __init__(self, title, xlabel, ylabel, style=None, fixed=None):
+        # pylint: disable=too-many-arguments, redefined-variable-type
+        super().__init__(title, xlabel, ylabel, style or {})
+        self.max_ = 0
+        if not fixed:
+            self.xdata = []
+            self.ydata = []
+        else:
             self.xdata = list(range(fixed))
             self.ydata = collections.deque([None] * fixed, maxlen=fixed)
             self.width = fixed
-        else:
-            self.xdata = []
-            self.ydata = []  # pylint: disable=redefined-variable-type
-            self.width = 0
-        styles = type(self).STYLES[style]
-        with self.lock:
-            self.ax = self.figure.add_subplot(
-                tile, title=title, xlabel=xlabel, ylabel=ylabel)
-            self.ax.get_xaxis().set_ticks([])
-            self.line, = self.ax.plot(self.xdata, self.ydata, **styles)
 
     def __call__(self, values):
         self.ydata += values
-        self.height = max(self.height, *values)
-        if not self.fixed:
-            self.xdata += [x + len(self.xdata) for x in range(len(values))]
-            self.width += len(values)
-        assert len(self.xdata) == len(self.ydata) == self.width
-        with self.lock:
-            self.line.set_xdata(self.xdata)
-            self.line.set_ydata(self.ydata)
-            self.ax.set_xlim(0, max(1, self.width - 1), emit=False)
-            self.ax.set_ylim(0, 1.05 * self.height, emit=False)
+        self.max_ = max(self.max_, *values)
+        self.height = 1.05 * self.max_
+        while len(self.xdata) < len(self.ydata):
+            self.xdata.append(len(self.xdata))
+        self.width = len(self.xdata) - 1
+        assert len(self.xdata) == len(self.ydata)

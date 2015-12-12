@@ -128,7 +128,7 @@ class Modulo(Dataset):
 
     cache = False
 
-    def __init__(self, amount=100000, inputs=32, classes=7):
+    def __init__(self, amount=60000, inputs=32, classes=7):
         self.amount = amount
         self.inputs = inputs
         self.classes = classes
