@@ -80,6 +80,7 @@ class Trainer:
                 return
             self._batch(index, batch)
         print('Done')
+        input('Press any key to close window')
         state.running = False
 
     def _batch(self, index, batch):
