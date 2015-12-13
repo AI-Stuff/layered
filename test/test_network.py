@@ -15,24 +15,44 @@ class TestMatrices:
         assert np.array_equal(matrices[0], np.zeros((5, 8)))
         assert np.array_equal(matrices[1], np.zeros((4, 2)))
 
-    def test_slice_indices(self, matrices):
+    def test_indexing(self, matrices):
         for index, matrix in enumerate(matrices):
             for (x, y), _ in np.ndenumerate(matrix):
-                slice_ = np.s_[index, x, y]
-                assert matrices[index][x, y] == matrices[slice_]
+                assert matrices[index][x, y] == matrices[index, x, y]
+
+    def test_slicing(self, matrices):
+        for index, matrix in enumerate(matrices):
+            assert (matrices[index][:, :] == matrices[index, :, :]).all()
+            assert (matrices[index][:, :] == matrix[:, :]).all()
 
     def test_negative_indices(self, matrices):
-        assert matrices[-1].shape == matrices[len(matrices) - 1].shape
+        for i in range(len(matrices)):
+            positive = matrices[len(matrices) - i - 1]
+            negative = matrices[i - 1]
+            assert negative.shape == positive.shape
+            assert (negative == positive).all()
 
-    def test_number_assignment(self, matrices):
+    def test_assignment(self, matrices):
         matrices[0, 4, 5] = 42
         assert matrices[0, 4, 5] == 42
 
     def test_matrix_assignment(self, matrices):
-        matrix = np.random.rand(5, 8)
+        np.random.seed(0)
+        matrix = np.random.rand(*matrices.shapes[0])
         matrices[0] = matrix
         assert (matrices[0] == matrix).all()
 
+    def test_sliced_matrix_assignment(self, matrices):
+        np.random.seed(0)
+        matrix = np.random.rand(*matrices.shapes[0])
+        matrices[0][:, :] = matrix
+        assert (matrices[0] == matrix).all()
+        matrices[0, :, :] = matrix
+        assert (matrices[0] == matrix).all()
+
     def test_invalid_matrix_assignment(self, matrices):
+        np.random.seed(0)
+        shape = matrices.shapes[0]
+        matrix = np.random.rand(shape[0] + 1, shape[1])
         with pytest.raises(ValueError):
-            matrices[0] = np.random.rand(5, 9)
+            matrices[0] = matrix
