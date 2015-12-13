@@ -54,7 +54,13 @@ class Matrices:
             elements = np.zeros(length)
         self.flat = elements
 
+    def __len__(self):
+        return len(self.shapes)
+
     def __getitem__(self, index):
+        if hasattr(index, '__len__'):
+            assert isinstance(index[0], int)
+            return self[index[0]][index[1:]]
         if isinstance(index, slice):
             return [self[i] for i in self._range_from_slice(index)]
         slice_ = self._locate(index)
@@ -63,8 +69,14 @@ class Matrices:
         return data
 
     def __setitem__(self, index, data):
-        if data.shape != self.shapes[index]:
-            raise ValueError('shape mismatch')
+        if hasattr(index, '__len__'):
+            assert isinstance(index[0], int)
+            self[index[0]][index[1:]] = data
+            return
+        if isinstance(index, slice):
+            for i in self._range_from_slice(index):
+                self[i] = data
+            return
         slice_ = self._locate(index)
         data = data.reshape(slice_.stop - slice_.start)
         self.flat[slice_] = data
@@ -107,6 +119,8 @@ class Matrices:
         return Matrices(self.shapes, operation(self.flat, other))
 
     def _locate(self, index):
+        assert isinstance(index, int), (
+            'Only single elemente can be indiced in the first dimension.')
         if index < 0:
             index = len(self.shapes) + index
         if not 0 <= index < len(self.shapes):

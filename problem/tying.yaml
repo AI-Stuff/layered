@@ -1,0 +1,21 @@
+dataset: Modulo
+cost: CrossEntropy
+layers:
+- activation: Linear
+  size: 32
+- activation: Relu
+  size: 64
+- activation: Relu
+  size: 64
+- activation: Relu
+  size: 64
+- activation: Softmax
+  size: 7
+epochs: 1
+learning_rate: 0.010
+weight_scale: 0.1
+# Tie together the two weight matrices
+# between the three Relu layers.
+weight_tying:
+- ['1,:,:', '2,:,:']
+evaluate_every: 5000

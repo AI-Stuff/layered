@@ -29,6 +29,7 @@ class Problem:
         self._load_definition(definition)
         self._load_symbols()
         self._load_layers()
+        self._load_weight_tying()
         assert not definition, (
             'unknown properties {} in problem definition'
             .format(', '.join(definition.keys())))
@@ -52,6 +53,21 @@ class Problem:
             size, activation = layer.pop('size'), layer.pop('activation')
             activation = self._find_symbol(layered.activation, activation)
             self.layers[index] = Layer(size, activation)
+
+    def _load_weight_tying(self):
+        # pylint: disable=attribute-defined-outside-init
+        self.weight_tying = [[y.split(',') for y in x]
+                             for x in self.weight_tying]
+        for i, group in enumerate(self.weight_tying):
+            for j, slices in enumerate(group):
+                for k, slice_ in enumerate(slices):
+                    slice_ = [int(s) if s else None for s in slice_.split(':')]
+                    self.weight_tying[i][j][k] = slice(*slice_)
+        for i, group in enumerate(self.weight_tying):
+            for j, slices in enumerate(group):
+                assert not slices[0].start and not slices[0].step, (
+                    'Ranges are not allowed in the first dimension.')
+                self.weight_tying[i][j][0] = slices[0].stop
 
     def _find_symbol(self, module, name, fallback=None):
         """
@@ -83,5 +99,6 @@ class Problem:
             'momentum': 0.0,
             'weight_scale': 0.1,
             'weight_decay': 0.0,
+            'weight_tying': [],
             'evaluate_every': 1000,
         }

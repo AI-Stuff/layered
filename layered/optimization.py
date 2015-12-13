@@ -18,6 +18,7 @@ class Momentum:
         self.previous = None
 
     def __call__(self, gradient, rate=0.9):
+        gradient = gradient.copy()
         if self.previous is None:
             self.previous = gradient.copy()
         else:
@@ -35,3 +36,30 @@ class WeightDecay:
 
     def __call__(self, weights, rate=1e-4):
         return (1 - rate) * weights
+
+
+class WeightTying:
+    """
+    Constraint groups of slices of the gradient to have the same value by
+    averaging them. Should be applied to the initial weights and each gradient.
+    """
+
+    def __init__(self, *groups):
+        for group in groups:
+            assert group and hasattr(group, '__len__')
+            assert all([isinstance(x[0], int) for x in group])
+            assert all([isinstance(y, (slice, int)) for x in group for y in x])
+        self.groups = groups
+
+    def __call__(self, matrices):
+        matrices = matrices.copy()
+        for group in self.groups:
+            slices = [matrices[slice_] for slice_ in group]
+            assert all([x.shape == slices[0].shape for x in slices]), (
+                'All slices within a group must have the same shape. '
+                'Shapes are ' + ', '.join(str(x.shape) for x in slices) + '.')
+            average = sum(slices) / len(slices)
+            assert average.shape == slices[0].shape
+            for slice_ in group:
+                matrices[slice_] = average
+        return matrices

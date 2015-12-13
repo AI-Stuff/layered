@@ -2,7 +2,8 @@ import functools
 import numpy as np
 from layered.gradient import BatchBackprop
 from layered.network import Network, Matrices
-from layered.optimization import GradientDecent, Momentum, WeightDecay
+from layered.optimization import (
+    GradientDecent, Momentum, WeightDecay, WeightTying)
 from layered.utility import repeated, batched
 from layered.evaluation import compute_costs, compute_error
 
@@ -38,6 +39,8 @@ class Trainer:
         self.momentum = Momentum()
         self.decent = GradientDecent()
         self.decay = WeightDecay()
+        self.tying = WeightTying(*self.problem.weight_tying)
+        self.weights = self.tying(self.weights)
 
     def _init_visualize(self):
         if not self.visual:
@@ -82,6 +85,7 @@ class Trainer:
     def _batch(self, index, batch):
         gradient = self.backprop(self.weights, batch)
         gradient = self.momentum(gradient, self.problem.momentum)
+        gradient = self.tying(gradient)
         self.weights = self.decent(
             self.weights, gradient, self.problem.learning_rate)
         self.weights = self.decay(self.weights, self.problem.weight_decay)

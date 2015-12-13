@@ -10,9 +10,7 @@ from layered.example import Example
 def random_matrices(shapes):
     np.random.seed(0)
     matrix = Matrices(shapes)
-    print(matrix.shape)
     matrix.flat = np.random.normal(0, 0.1, len(matrix.flat))
-    print(matrix.shape)
     return matrix
 
 
