@@ -90,8 +90,8 @@ class Problem:
     @staticmethod
     def _defaults():
         return {
-            'cost': 'Squared',
-            'dataset': 'Regression',
+            'cost': 'SquaredError',
+            'dataset': 'Modulo',
             'layers': [],
             'epochs': 1,
             'batch_size': 1,

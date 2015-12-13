@@ -1,5 +1,5 @@
 # pylint: disable=no-self-use, wildcard-import, unused-wildcard-import
-from layered.activation import Linear, Relu
+from layered.activation import Identity, Relu
 from layered.cost import CrossEntropy
 from layered.gradient import (
     NumericalGradient, Backprop, BatchBackprop, ParallelBackprop)
@@ -11,7 +11,7 @@ class TestBackprop:
     def test_against_numerical(self, network_and_weights, cost, example):
         network, weights = network_and_weights
         if isinstance(cost, CrossEntropy) and isinstance(
-                network.layers[1].activation, (Linear, Relu)):
+                network.layers[1].activation, (Identity, Relu)):
             pytest.xfail(
                 'Cross entropy doesn\'t work with linear activations for some '
                 'reason.')

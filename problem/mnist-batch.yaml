@@ -2,7 +2,7 @@
 dataset: Mnist
 cost: CrossEntropy
 layers:
-- activation: Linear
+- activation: Identity
   size: 784
 - activation: Relu
   size: 700

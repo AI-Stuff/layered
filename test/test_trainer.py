@@ -10,7 +10,7 @@ def problem():
         """
         dataset: Test
         layers:
-        - activation: Linear
+        - activation: Identity
           size: 3
         """)
 

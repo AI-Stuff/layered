@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from layered.activation import Linear, Relu, Sigmoid, Softmax
-from layered.cost import Squared, CrossEntropy
+from layered.activation import Identity, Relu, Sigmoid, Softmax
+from layered.cost import SquaredError, CrossEntropy
 from layered.network import Matrices, Layer, Network
 from layered.utility import pairwise
 from layered.example import Example
@@ -22,10 +22,10 @@ def weights_and_gradient(request):
     return weights, gradient
 
 
-@pytest.fixture(params=[Linear, Relu, Sigmoid, Softmax])
+@pytest.fixture(params=[Identity, Relu, Sigmoid, Softmax])
 def network_and_weights(request):
     np.random.seed(0)
-    layers = [Layer(5, Linear)] + [Layer(5, request.param) for _ in range(3)]
+    layers = [Layer(5, Identity)] + [Layer(5, request.param) for _ in range(3)]
     network = Network(layers)
     weights = Matrices(network.shapes)
     weights.flat = np.random.normal(0, 0.01, len(weights.flat))
@@ -49,6 +49,6 @@ def examples():
     return examples
 
 
-@pytest.fixture(params=[Squared, CrossEntropy])
+@pytest.fixture(params=[SquaredError, CrossEntropy])
 def cost(request):
     return request.param()

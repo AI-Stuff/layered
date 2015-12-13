@@ -50,7 +50,7 @@ sections below.
 dataset: Mnist
 cost: CrossEntropy
 layers:
-- activation: Linear
+- activation: Identity
   size: 784
 - activation: Relu
   size: 700
@@ -114,18 +114,19 @@ networks. Let's start!
 ### Step 1: Network Definition
 
 A network is defined by its layers. The parameters for a layer are the amount
-of neurons and the activation function. The first layer has a linear activation
-since we don't want to apply any function to the input data.
+of neurons and the activation function. The first layer has the identity
+function since we don't want to already modify the input data before feeding it
+in.
 
 ```python
 from layered.network import Network
-from layered.activation import Linear, Relu, Softmax
+from layered.activation import Identity, Relu, Softmax
 
 num_inputs = 784
 num_outputs = 10
 
 network = Network([
-    Layer(num_inputs, Linear),
+    Layer(num_inputs, Identity),
     Layer(700, Relu),
     Layer(500, Relu),
     Layer(300, Relu),
@@ -137,7 +138,7 @@ network = Network([
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
-| Linear | x | ![Linear](image/linear.png) |
+| Identity | x | ![Identity](image/identity.png) |
 | Relu | max(0, x) | ![Relu](image/relu.png) |
 | Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
 | Softmax | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
@@ -163,11 +164,11 @@ The classes for this can be imported from the `gradient` and `optimization`
 modules. We also need a cost function.
 
 ```python
-from layered.cost import Squared
+from layered.cost import SquaredError
 from layered.gradient import Backprop
 from layered.optimization import GradientDecent
 
-backprop = Backprop(network, cost=Squared())
+backprop = Backprop(network, cost=SquaredError())
 decent = GradientDecent()
 ```
 
@@ -175,7 +176,7 @@ decent = GradientDecent()
 
 | Function | Definition | Graph |
 | -------- | :--------: | ----- |
-| Squared | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
+| SquaredError | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
 | CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | ![Cross Entropy](image/cross-entropy.png) |
 
 ### Step 6: Dataset and Training

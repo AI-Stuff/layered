@@ -1,7 +1,7 @@
 dataset: Modulo
 cost: CrossEntropy
 layers:
-- activation: Linear
+- activation: Identity
   size: 32
 - activation: Relu
   size: 64

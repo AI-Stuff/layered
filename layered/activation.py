@@ -16,7 +16,7 @@ class Activation:
         raise NotImplementedError
 
 
-class Linear(Activation):
+class Identity(Activation):
 
     def __call__(self, incoming):
         return incoming

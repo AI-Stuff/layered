@@ -10,7 +10,7 @@ class Cost:
         raise NotImplementedError
 
 
-class Squared(Cost):
+class SquaredError(Cost):
     """
     Fast and simple cost function.
     """
