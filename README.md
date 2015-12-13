@@ -35,7 +35,7 @@ problems can be found in the troubleshooting section.
 
 ```bash
 virtualenv . -p python3 --system-site-packages && source bin/activate
-pip install layered
+pip3 install layered
 curl -o mnist.yaml -L http://git.io/vBPOH
 layered mnist.yaml -v
 ```
@@ -90,8 +90,8 @@ last command is just to see if everything's working.
 ```bash
 git clone https://github.com/danijar/layered.git && cd layered
 virtualenv . -p python3 --system-site-packages && source bin/activate
-pip install -e .
-python -m layered problem/modulo.yaml -v
+pip3 install -e .
+python3 -m layered problem/modulo.yaml -v
 ```
 
 Now you can start playing around with the code. For pull requests, please
@@ -216,6 +216,11 @@ Troubleshooting
 ### Failed building wheel
 
 You can safely ignore this messages during installation.
+
+### Python is not installed as a framework
+
+If you get this error on Mac, don't create a virtualenv and install layered
+globally with `sudo pip3 install layered`.
 
 ### Crash at startup
 
