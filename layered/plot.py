@@ -1,20 +1,24 @@
+# pylint: disable=wrong-import-position
 import collections
 import time
 import warnings
 import inspect
 import threading
 import matplotlib
-import matplotlib.pyplot as plt
-
 
 # Don't call the code if Sphinx inspects the file mocking external imports.
-if inspect.ismodule(matplotlib):
+if inspect.ismodule(matplotlib):  # noqa
+    # On Mac force backend that works with threading.
+    if matplotlib.get_backend() == 'MacOSX':
+        matplotlib.use('TkAgg')
     # Hide matplotlib deprecation message.
     warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)
     # Ensure available interactive backend.
     if matplotlib.get_backend() not in matplotlib.rcsetup.interactive_bk:
         print('No visual backend available. Maybe you are inside a virtualenv '
               'that was created without --system-site-packages.')
+
+import matplotlib.pyplot as plt
 
 
 class Interface:
