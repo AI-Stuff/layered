@@ -136,12 +136,12 @@ network = Network([
 
 ### Step 2: Activation Functions
 
-| Function | Definition | Graph |
-| -------- | :--------: | ----- |
-| Identity | x | ![Identity](image/identity.png) |
-| Relu | max(0, x) | ![Relu](image/relu.png) |
-| Sigmoid | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
-| Softmax | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
+| Function | Description | Definition | Graph |
+| -------- | ----------- | :--------: | ----- |
+| Identity | Don't transform the incoming data. That's what you would expect at input layers. | x | ![Identity](image/identity.png) |
+| Relu | Fast non-linear function that has proven to be effective in deep networks. | max(0, x) | ![Relu](image/relu.png) |
+| Sigmoid | The de facto standard activation before Relu came up. Smoothly maps the incoming activation into a range from zero to one. | 1 / (1 + exp(-x)) | ![Sigmoid](image/sigmoid.png) |
+| Softmax | Smooth activation function where the outgoing activations sum up to one. It's commonly used for output layers in classification because the outgoing activations can be interpreted as probabilities. | exp(x) / sum(exp(x)) | ![Softmax](image/softmax.png) |
 
 ### Step 3: Weight Initialization
 
@@ -174,10 +174,10 @@ decent = GradientDecent()
 
 ### Step 5: Cost Functions
 
-| Function | Definition | Graph |
-| -------- | :--------: | ----- |
-| SquaredError | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
-| CrossEntropy | -((target * log(pred)) + (1 - target) * log(1 - pred)) | ![Cross Entropy](image/cross-entropy.png) |
+| Function | Description | Definition | Graph |
+| -------- | ----------- | :--------: | ----- |
+| SquaredError | The most common cost function. The difference is squared to always be positive and penalize large errors stronger. | (pred - target) ^ 2 / 2 | ![Squared Error](image/squared-error.png) |
+| CrossEntropy | Logistic cost function useful for classification tasks. Commonly used in conjunction with Softmax output layers. | -((target * log(pred)) + (1 - target) * log(1 - pred)) | ![Cross Entropy](image/cross-entropy.png) |
 
 ### Step 6: Dataset and Training
 
