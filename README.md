@@ -188,7 +188,7 @@ training examples and train the weights on them.
 from layered.dataset import Mnist
 
 dataset = Mnist()
-for example dataset.training:
+for example in dataset.training:
     gradient = backprop(network, cost)
     weights = decent(weights, gradient, learning_rate=0.1)
 ```
