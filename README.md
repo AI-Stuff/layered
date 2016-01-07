@@ -189,7 +189,7 @@ from layered.dataset import Mnist
 
 dataset = Mnist()
 for example in dataset.training:
-    gradient = backprop(network, cost)
+    gradient = backprop(weights, example)
     weights = decent(weights, gradient, learning_rate=0.1)
 ```
 
