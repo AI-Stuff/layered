@@ -1,6 +1,6 @@
 # pylint: disable=wildcard-import, unused-wildcard-import, no-self-use
-import pytest
 import numpy as np
+import pytest
 from layered import optimization
 from test.fixtures import *
 
@@ -52,14 +52,12 @@ class TestMomentum:
             gradient = momentum(gradient, rate=0)
         assert np.allclose(gradient, original)
 
-    def test_shapes_match(self, weights_and_gradient):
-        weights, _ = weights_and_gradient
+    def test_shapes_match(self, weights):
         momentum = optimization.Momentum()
-        updated = momentum(weights, 0.1)
+        updated = momentum(weights, 0.9)
         assert weights.shapes == updated.shapes
 
-    def test_copy_data(self, weights_and_gradient):
-        weights, _ = weights_and_gradient
+    def test_copy_data(self, weights):
         momentum = optimization.Momentum()
         before = weights.copy()
         updated = momentum(weights, 0.1)
@@ -71,21 +69,18 @@ class TestMomentum:
 
 class TestWeightDecay:
 
-    def test_calculation(self, weights_and_gradient):
-        weights, _ = weights_and_gradient
+    def test_calculation(self, weights):
         decay = optimization.WeightDecay()
         updated = decay(weights, 0.1)
         reference = 0.9 * weights
         assert np.allclose(updated, reference)
 
-    def test_shapes_match(self, weights_and_gradient):
-        weights, _ = weights_and_gradient
+    def test_shapes_match(self, weights):
         decay = optimization.WeightDecay()
         updated = decay(weights, 0.1)
         assert weights.shapes == updated.shapes
 
-    def test_copy_data(self, weights_and_gradient):
-        weights, _ = weights_and_gradient
+    def test_copy_data(self, weights):
         decay = optimization.WeightDecay()
         before = weights.copy()
         updated = decay(weights, 0.1)

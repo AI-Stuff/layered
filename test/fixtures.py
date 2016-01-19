@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 from layered.activation import Identity, Relu, Sigmoid, Softmax
 from layered.cost import SquaredError, CrossEntropy
 from layered.network import Matrices, Layer, Network
@@ -12,6 +12,13 @@ def random_matrices(shapes):
     matrix = Matrices(shapes)
     matrix.flat = np.random.normal(0, 0.1, len(matrix.flat))
     return matrix
+
+
+@pytest.fixture(params=[(5, 5, 6, 3)])
+def weights(request):
+    shapes = list(pairwise(request.param))
+    weights = random_matrices(shapes)
+    return weights
 
 
 @pytest.fixture(params=[(5, 5, 6, 3)])

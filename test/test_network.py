@@ -1,6 +1,6 @@
 # pylint: disable=no-self-use
-import pytest
 import numpy as np
+import pytest
 from layered.network import Matrices
 
 
