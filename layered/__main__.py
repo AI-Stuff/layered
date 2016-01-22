@@ -18,11 +18,15 @@ def main():
     parser.add_argument(
         '-s', '--save', default=None,
         help='path to dump the learned weights at each evaluation')
+    parser.add_argument(
+        '-c', '--check', action='store_true',
+        help='whether to activate gradient checking')
     args = parser.parse_args()
 
     print('Problem', os.path.split(args.problem)[1])
     problem = Problem(args.problem)
-    trainer = Trainer(problem, args.load, args.save, args.visual)
+    trainer = Trainer(
+        problem, args.load, args.save, args.visual, args.check)
     trainer()
 
 

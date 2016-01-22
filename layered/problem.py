@@ -98,6 +98,7 @@ class Problem:
             'learning_rate': 0.1,
             'momentum': 0.0,
             'weight_scale': 0.1,
+            'weight_mean': 0.0,
             'weight_decay': 0.0,
             'weight_tying': [],
             'evaluate_every': 1000,

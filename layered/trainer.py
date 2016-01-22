@@ -1,6 +1,6 @@
 import functools
 import numpy as np
-from layered.gradient import BatchBackprop
+from layered.gradient import BatchBackprop, CheckedBackprop
 from layered.network import Network, Matrices
 from layered.optimization import (
     GradientDecent, Momentum, WeightDecay, WeightTying)
@@ -9,13 +9,15 @@ from layered.evaluation import compute_costs, compute_error
 
 
 class Trainer:
-    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init, too-many-arguments
 
-    def __init__(self, problem, load=None, save=None, visual=False):
+    def __init__(self, problem, load=None, save=None,
+                 visual=False, check=False):
         self.problem = problem
         self.load = load
         self.save = save
         self.visual = visual
+        self.check = check
         self._init_network()
         self._init_training()
         self._init_visualize()
@@ -31,11 +33,16 @@ class Trainer:
             self.weights.flat = loaded
         else:
             self.weights.flat = np.random.normal(
-                0, self.problem.weight_scale, len(self.weights.flat))
+                self.problem.weight_mean, self.problem.weight_scale,
+                len(self.weights.flat))
 
     def _init_training(self):
+        # pylint: disable=redefined-variable-type
         """Classes needed during training."""
-        self.backprop = BatchBackprop(self.network, self.problem.cost)
+        if self.check:
+            self.backprop = CheckedBackprop(self.network, self.problem.cost)
+        else:
+            self.backprop = BatchBackprop(self.network, self.problem.cost)
         self.momentum = Momentum()
         self.decent = GradientDecent()
         self.decay = WeightDecay()
@@ -84,7 +91,11 @@ class Trainer:
         state.running = False
 
     def _batch(self, index, batch):
-        gradient = self.backprop(self.weights, batch)
+        if self.check:
+            assert len(batch) == 1
+            gradient = self.backprop(self.weights, batch[0])
+        else:
+            gradient = self.backprop(self.weights, batch)
         gradient = self.momentum(gradient, self.problem.momentum)
         gradient = self.tying(gradient)
         self.weights = self.decent(

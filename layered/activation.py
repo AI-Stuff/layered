@@ -59,3 +59,36 @@ class Softmax(Activation):
         sum_ = delta.sum(axis=delta.ndim - 1, keepdims=True)
         delta -= outgoing * sum_
         return delta
+
+
+class Sparse(Activation):
+
+    def __init__(self, inhibition=0.05, leaking=0.0):
+        self.inhibition = inhibition
+        self.leaking = leaking
+
+    def __call__(self, incoming):
+        count = len(incoming)
+        length = int(np.sqrt(count))
+        assert length ** 2 == count, 'layer size must be a square'
+        field = incoming.copy().reshape((length, length))
+        radius = int(np.sqrt(self.inhibition * count)) // 2
+        assert radius, 'no inhibition due to small factor'
+        outgoing = np.zeros(field.shape)
+        while True:
+            x, y = np.unravel_index(field.argmax(), field.shape)
+            if field[x, y] <= 0:
+                break
+            outgoing[x, y] = 1
+            surrounding = np.s_[
+                max(x - radius, 0):min(x + radius + 1, length),
+                max(y - radius, 0):min(y + radius + 1, length)]
+            field[surrounding] = 0
+            assert field[x, y] == 0
+        outgoing = outgoing.reshape(count)
+        outgoing = np.maximum(outgoing, self.leaking * incoming)
+        return outgoing
+
+    def delta(self, incoming, outgoing, above):
+        delta = np.greater(outgoing, 0).astype(float)
+        return delta * above
