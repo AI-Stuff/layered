@@ -1,4 +1,4 @@
-# ...%
+# 8.57%
 dataset: Mnist
 cost: CrossEntropy
 layers:
@@ -7,14 +7,14 @@ layers:
 - activation: Sparse
   size: 625
 - activation: Sparse
-  size: 400
+  size: 625
 - activation: Softmax
   size: 10
 epochs: 5
-learning_rate: 0.05
-momentum: 0.8
+learning_rate: 0.1
+momentum: 0.9
 batch_size: 100
-weight_scale: 0.1
-weight_mean: 0.2
+weight_scale: 0.001
+weight_mean: 0.001
 weight_decay: 0
 evaluate_every: 5000
