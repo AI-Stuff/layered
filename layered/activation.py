@@ -61,7 +61,7 @@ class Softmax(Activation):
         return delta
 
 
-class Sparse(Activation):
+class SparseField(Activation):
 
     def __init__(self, inhibition=0.05, leaking=0.0):
         self.inhibition = inhibition
@@ -92,3 +92,41 @@ class Sparse(Activation):
     def delta(self, incoming, outgoing, above):
         delta = np.greater(outgoing, 0).astype(float)
         return delta * above
+
+
+class SparseRange(Activation):
+    """
+    E%-Max Winner-Take-All.
+
+    Binary activation. First, the activation function is applied. Then all
+    neurons within the specified range below the strongest neuron are set to
+    one. All others are set to zero. The gradient is the one of the activation
+    function for active neurons and zero otherwise.
+
+    See: A Second Function of Gamma Frequency Oscillations: An E%-Max
+    Winner-Take-All Mechanism Selects Which Cells Fire. (2009)
+    """
+
+    def __init__(self, range_=0.3, function=Sigmoid()):
+        assert 0 < range_ < 1
+        self._range = range_
+        self._function = function
+
+    def __call__(self, incoming):
+        incoming = self._function(incoming)
+        threshold = self._threshold(incoming)
+        active = (incoming >= threshold)
+        outgoing = np.zeros(incoming.shape)
+        outgoing[active] = 1
+        # width = active.sum() * 80 / 1000
+        # print('|', '#' * width, ' ' * (80 - width), '|')
+        return outgoing
+
+    def delta(self, incoming, outgoing, above):
+        # return self._function.delta(incoming, outgoing, outgoing * above)
+        return outgoing * self._function.delta(incoming, outgoing, above)
+
+    def _threshold(self, incoming):
+        min_, max_ = incoming.min(), incoming.max()
+        threshold = min_ + (max_ - min_) * (1 - self._range)
+        return threshold

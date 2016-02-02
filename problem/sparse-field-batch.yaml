@@ -1,0 +1,20 @@
+# 8.57%
+dataset: Mnist
+cost: CrossEntropy
+layers:
+- activation: Identity
+  size: 784
+- activation: SparseField
+  size: 625
+- activation: SparseField
+  size: 625
+- activation: Softmax
+  size: 10
+epochs: 5
+learning_rate: 0.1
+momentum: 0.9
+batch_size: 100
+weight_scale: 0.001
+weight_mean: 0.001
+weight_decay: 0
+evaluate_every: 5000

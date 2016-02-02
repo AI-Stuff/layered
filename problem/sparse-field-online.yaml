@@ -4,9 +4,9 @@ cost: CrossEntropy
 layers:
 - activation: Identity
   size: 784
-- activation: Sparse
+- activation: SparseField
   size: 625
-- activation: Sparse
+- activation: SparseField
   size: 625
 - activation: Softmax
   size: 10
