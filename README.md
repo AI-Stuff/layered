@@ -1,29 +1,22 @@
 [![Build Status][1]][2]
 [![Code Climate][3]][4]
-[![PyPI Downloads][5]][6]
-[![Documentation][7]][8]
+[![Documentation][5]][6]
 
 [1]: https://travis-ci.org/danijar/layered.svg?branch=master
 [2]: https://travis-ci.org/danijar/layered
 [3]: https://codeclimate.com/github/danijar/layered/badges/gpa.svg
 [4]: https://codeclimate.com/github/danijar/layered
-[5]: https://img.shields.io/pypi/dw/layered.svg
-[6]: https://pypi.python.org/pypi/layered
-[7]: https://readthedocs.org/projects/pip/badge/
-[8]: https://layered.readthedocs.org/en/latest/
+[5]: https://readthedocs.org/projects/pip/badge/
+[6]: https://layered.readthedocs.org/en/latest/
 
 Layered
 =======
 
-This project is aims to be a clean reference implementation of feed forward
+This project aims to be a clean and modular implementation of feed forward
 neural networks. It's written in Python 3 and published under the MIT license.
-I started this project as part of my efforts to understand the concepts of deep
-learning. You can use this repository as guidance if you want to implement
-neural networks what I highly recommend if you are interested in understanding
-them.
-
-Please don't hestitate to send feedback and ideas to me at mail@danijar.com and
-open issues if something's not working.
+I started this project in order to understand the concepts of deep learning.
+You can use this repository as guidance if you want to implement neural
+networks what I highly recommend if you are interested in understanding them.
 
 Instructions
 ------------
@@ -36,7 +29,7 @@ problems can be found in the troubleshooting section.
 ```bash
 virtualenv . -p python3 --system-site-packages && source bin/activate
 pip3 install layered
-curl -o mnist.yaml -L http://git.io/vBPOH
+curl -o mnist.yaml -L http://git.io/vr7y1
 layered mnist.yaml -v
 ```
 
@@ -85,7 +78,7 @@ layered [-h] [-v] [-l weights.npy] [-s weights.npy] problem.yaml
 ### Contribution
 
 Optionally, create a virtual environment. Then install the dependencies. The
-last command is just to see if everything's working.
+last command is to see if everything works.
 
 ```bash
 git clone https://github.com/danijar/layered.git && cd layered
@@ -146,7 +139,7 @@ network = Network([
 ### Step 3: Weight Initialization
 
 The weight matrices of the network are handed to algorithms like
-backpropagation, gradient decent and weight decay. If the initial weights of a
+backpropagation, gradient descent and weight decay. If the initial weights of a
 neural network would be zero, no activation would be passed to the deeper
 layers. So we start with random values sampled from a normal distribution.
 
@@ -159,9 +152,9 @@ weights.flat = np.random.normal(0, weight_scale, len(weights.flat))
 
 ### Step 4: Optimization Algorithm
 
-Now let's learn good weights with standard backpropagation and gradient decent.
-The classes for this can be imported from the `gradient` and `optimization`
-modules. We also need a cost function.
+Now let's learn good weights with standard backpropagation and gradient
+descent.  The classes for this can be imported from the `gradient` and
+`optimization` modules. We also need a cost function.
 
 ```python
 from layered.cost import SquaredError
@@ -169,7 +162,7 @@ from layered.gradient import Backprop
 from layered.optimization import GradientDecent
 
 backprop = Backprop(network, cost=SquaredError())
-decent = GradientDecent()
+descent = GradientDecent()
 ```
 
 ### Step 5: Cost Functions
@@ -190,7 +183,7 @@ from layered.dataset import Mnist
 dataset = Mnist()
 for example in dataset.training:
     gradient = backprop(weights, example)
-    weights = decent(weights, gradient, learning_rate=0.1)
+    weights = descent(weights, gradient, learning_rate=0.1)
 ```
 
 ### Step 7: Evaluation
